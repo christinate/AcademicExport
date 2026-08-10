@@ -28,7 +28,7 @@ export default class AcademicExportPlugin extends Plugin {
     this.registerEvent(this.app.workspace.on("editor-change", () => this.refreshPageCounter()));
     this.app.workspace.onLayoutReady(() => {
       // Register after Obsidian's core menu handlers so this item follows the
-      // built-in Export to PDF entry in their shared export section.
+      // built-in Export to PDF entry in their shared action section.
       this.registerEvent(this.app.workspace.on("file-menu", (menu: Menu, file: TAbstractFile) => this.addFileMenuItems(menu, file)));
       this.registerEvent(this.app.workspace.on("editor-menu", (menu: Menu) => { const file = this.app.workspace.getActiveFile(); if (file) this.addExportItem(menu, file); }));
       this.refreshPageCounter();
@@ -63,7 +63,7 @@ export default class AcademicExportPlugin extends Plugin {
       if (generation === this.pageCounterGeneration) this.pageCounterEl.setText("Pages: unavailable");
     }
   }
-  private addExportItem(menu: Menu, file: TFile): void { menu.addItem((item) => item.setTitle("Export in…").setIcon("download").setSection("export").onClick(() => void this.startExport(file))); }
+  private addExportItem(menu: Menu, file: TFile): void { menu.addItem((item) => item.setTitle("Export in…").setIcon("download").setSection("action").onClick(() => void this.startExport(file))); }
   private addFileMenuItems(menu: Menu, file: TAbstractFile): void {
     if (file instanceof TFile && file.extension === "md") {
       this.addExportItem(menu, file);
