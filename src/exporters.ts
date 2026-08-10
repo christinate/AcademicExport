@@ -3,13 +3,10 @@ import {
   Paragraph, Table, TableCell, TableRow, TabStopPosition, TabStopType, TextRun,
   VerticalAlign, WidthType, SectionType
 } from "docx";
-import { PDFDocument, rgb } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import type { PDFFont, PDFImage, PDFPage } from "pdf-lib";
-import serifRegular from "../assets/fonts/LiberationSerif-Regular.woff2?inline";
-import serifBold from "../assets/fonts/LiberationSerif-Bold.woff2?inline";
-import serifItalic from "../assets/fonts/LiberationSerif-Italic.woff2?inline";
-import serifBoldItalic from "../assets/fonts/LiberationSerif-BoldItalic.woff2?inline";
+import serifRegular from "../assets/fonts/LiberationSerif-Regular.ttf?inline";
 import type { OutputType } from "./config";
 import type { DocumentFormat } from "./types";
 import type { AddendumPage, ContentBlock, EmbeddedImage, InlineSpan, MarkdownTable, RenderedDocument } from "./render";
@@ -22,11 +19,13 @@ const HALF_INCH = 720;
 const CONTENT_DXA = 9360;
 const INLINE_MATH_HEIGHT = 18;
 const DISPLAY_MATH_HEIGHT = 36;
+const WORD_INLINE_MATH_HEIGHT = 24;
+const WORD_DISPLAY_MATH_HEIGHT = 54;
 const spansText = (spans: InlineSpan[]) => spans.map((span) => span.text).join("");
 
 function wordRun(span: InlineSpan, overrides: { bold?: boolean; italic?: boolean } = {}): TextRun | ImageRun {
   if (span.math) {
-    const height = INLINE_MATH_HEIGHT, width = Math.max(4, Math.round(height * ((span.math.width ?? height) / (span.math.height ?? height))));
+    const height = WORD_INLINE_MATH_HEIGHT, width = Math.max(4, Math.round(height * ((span.math.width ?? height) / (span.math.height ?? height))));
     return wordImage(span.math, width, height);
   }
   return new TextRun({
@@ -132,7 +131,7 @@ function imageScale(image: EmbeddedImage, maxWidthPx: number, maxHeightPx: numbe
 function wordImage(image: EmbeddedImage, maxWidthPx = 624, maxHeightPx = 648): ImageRun {
   if (!image.data || !image.mimeType) throw new Error(`Image data is unavailable: ${image.source}`);
   const type = image.mimeType.split("/")[1] as "png" | "jpg" | "gif" | "bmp";
-  const limits = image.source.startsWith("math-display:") ? { width: Math.min(maxWidthPx, 520), height: Math.min(maxHeightPx, DISPLAY_MATH_HEIGHT) } : { width: maxWidthPx, height: maxHeightPx };
+  const limits = image.source.startsWith("math-display:") ? { width: Math.min(maxWidthPx, 520), height: Math.min(maxHeightPx, WORD_DISPLAY_MATH_HEIGHT) } : { width: maxWidthPx, height: maxHeightPx };
   return new ImageRun({ data: new Uint8Array(image.data), type, transformation: imageScale(image, limits.width, limits.height), altText: { title: image.alt, description: image.alt, name: image.alt } });
 }
 
@@ -270,12 +269,16 @@ function fontBytes(base64: string): Uint8Array {
 
 async function embedPdfFonts(pdf: PDFDocument): Promise<PdfFonts> {
   pdf.registerFontkit(fontkit);
-  const options = { subset: true };
-  const [regular, bold, italic, boldItalic] = await Promise.all([
-    pdf.embedFont(fontBytes(serifRegular), options), pdf.embedFont(fontBytes(serifBold), options),
-    pdf.embedFont(fontBytes(serifItalic), options), pdf.embedFont(fontBytes(serifBoldItalic), options)
+  const [regular, bold, italic, boldItalic, code] = await Promise.all([
+    pdf.embedFont(fontBytes(serifRegular), { subset: true }), pdf.embedFont(StandardFonts.TimesRomanBold),
+    pdf.embedFont(StandardFonts.TimesRomanItalic), pdf.embedFont(StandardFonts.TimesRomanBoldItalic),
+    pdf.embedFont(StandardFonts.Courier)
   ]);
-  return { regular, bold, italic, boldItalic, code: regular };
+  return { regular, bold, italic, boldItalic, code };
+}
+
+function supportedPdfFont(preferred: PDFFont, fallback: PDFFont, text: string): PDFFont {
+  try { preferred.encodeText(text); return preferred; } catch { return fallback; }
 }
 
 function addPdfPage(state: PdfState): void { state.page = state.pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]); state.pages.push(state.page); state.y = BODY_TOP_BASELINE; }
@@ -288,7 +291,7 @@ function tokens(state: PdfState, spans: InlineSpan[], force?: { bold?: boolean; 
   const result: PdfToken[] = [];
   for (const span of spans) {
     if (span.math) result.push({ text: "", font: state.fonts.regular, image: span.math });
-    else span.text.replace(/\s+/g, " ").split(/(\s+)/).filter(Boolean).forEach((text) => result.push({ text, font: pdfFont(state, span, force), strike: span.strike, superscript: span.superscript }));
+    else span.text.replace(/\s+/g, " ").split(/(\s+)/).filter(Boolean).forEach((text) => result.push({ text, font: supportedPdfFont(pdfFont(state, span, force), state.fonts.regular, text), strike: span.strike, superscript: span.superscript }));
   }
   return result;
 }
@@ -457,7 +460,7 @@ async function toIeeePdf(rendered: RenderedDocument): Promise<ArrayBuffer> {
   const fontFor = (span: InlineSpan, bold = false) => (bold || span.bold) && span.italic ? fonts.boldItalic : bold || span.bold ? fonts.bold : span.italic ? fonts.italic : span.code ? fonts.code : fonts.regular;
   const linesFor = (spans: InlineSpan[], width: number, size: number, bold = false): PdfToken[][] => {
     const items: PdfToken[] = [];
-    spans.forEach((span) => { if (span.math) items.push({ text: "", font: fonts.regular, image: span.math }); else span.text.replace(/\s+/g, " ").split(/(\s+)/).filter(Boolean).forEach((text) => items.push({ text, font: fontFor(span, bold), strike: span.strike })); });
+    spans.forEach((span) => { if (span.math) items.push({ text: "", font: fonts.regular, image: span.math }); else span.text.replace(/\s+/g, " ").split(/(\s+)/).filter(Boolean).forEach((text) => items.push({ text, font: supportedPdfFont(fontFor(span, bold), fonts.regular, text), strike: span.strike })); });
     const lines: PdfToken[][] = [[]]; let used = 0;
     for (const item of items) { const w = item.image ? size * 1.2 * ((item.image.width ?? size) / (item.image.height ?? size)) : item.font.widthOfTextAtSize(item.text, size); if (used + w > width && lines[lines.length - 1].some((token) => token.text.trim() || token.image)) { lines.push([]); used = 0; if (!item.text.trim() && !item.image) continue; } lines[lines.length - 1].push(item); used += w; }
     return lines;

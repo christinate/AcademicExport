@@ -37,13 +37,9 @@ vitest.config.ts
 
 ```text
 assets/fonts/LiberationSerif-Bold.ttf
-assets/fonts/LiberationSerif-Bold.woff2
 assets/fonts/LiberationSerif-BoldItalic.ttf
-assets/fonts/LiberationSerif-BoldItalic.woff2
 assets/fonts/LiberationSerif-Italic.ttf
-assets/fonts/LiberationSerif-Italic.woff2
 assets/fonts/LiberationSerif-Regular.ttf
-assets/fonts/LiberationSerif-Regular.woff2
 assets/fonts/OFL.txt
 ```
 
