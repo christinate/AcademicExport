@@ -19,8 +19,6 @@ export default class AcademicExportPlugin extends Plugin {
     this.settings = mergeSettings(await this.loadData() as Partial<PluginSettings> | null);
     this.addSettingTab(new ExportSettingTab(this));
     this.addCommand({ id: "export-in", name: "Export in…", checkCallback: (checking) => { const file = this.app.workspace.getActiveFile(); if (!file) return false; if (!checking) void this.startExport(file); return true; } });
-    this.registerEvent(this.app.workspace.on("file-menu", (menu: Menu, file: TAbstractFile) => this.addFileMenuItems(menu, file)));
-    this.registerEvent(this.app.workspace.on("editor-menu", (menu: Menu) => { const file = this.app.workspace.getActiveFile(); if (file) this.addExportItem(menu, file); }));
     this.pageCounterEl = this.addStatusBarItem();
     this.pageCounterEl.addClass("academic-export-page-counter");
     this.pageCounterEl.addClass("mod-clickable");
@@ -28,7 +26,13 @@ export default class AcademicExportPlugin extends Plugin {
     this.pageCounterEl.addEventListener("click", () => new Notice("Change the page-counter format in this plugin's settings."));
     this.registerEvent(this.app.workspace.on("file-open", () => this.refreshPageCounter()));
     this.registerEvent(this.app.workspace.on("editor-change", () => this.refreshPageCounter()));
-    this.app.workspace.onLayoutReady(() => this.refreshPageCounter());
+    this.app.workspace.onLayoutReady(() => {
+      // Register after Obsidian's core menu handlers so this item follows the
+      // built-in Export to PDF entry in their shared export section.
+      this.registerEvent(this.app.workspace.on("file-menu", (menu: Menu, file: TAbstractFile) => this.addFileMenuItems(menu, file)));
+      this.registerEvent(this.app.workspace.on("editor-menu", (menu: Menu) => { const file = this.app.workspace.getActiveFile(); if (file) this.addExportItem(menu, file); }));
+      this.refreshPageCounter();
+    });
   }
   async saveSettings(): Promise<void> { await this.saveData(this.settings); }
   refreshPageCounter(): void {
