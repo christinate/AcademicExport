@@ -17,16 +17,12 @@ const HALF_POINTS = 24;
 const DOUBLE_LINE = 480;
 const HALF_INCH = 720;
 const CONTENT_DXA = 9360;
-const INLINE_MATH_HEIGHT = 18;
-const DISPLAY_MATH_HEIGHT = 36;
-const WORD_INLINE_MATH_HEIGHT = 24;
-const WORD_DISPLAY_MATH_HEIGHT = 54;
+const PDF_MATH_SCALE = 0.75;
 const spansText = (spans: InlineSpan[]) => spans.map((span) => span.text).join("");
 
 function wordRun(span: InlineSpan, overrides: { bold?: boolean; italic?: boolean } = {}): TextRun | ImageRun {
   if (span.math) {
-    const height = WORD_INLINE_MATH_HEIGHT, width = Math.max(4, Math.round(height * ((span.math.width ?? height) / (span.math.height ?? height))));
-    return wordImage(span.math, width, height);
+    return wordImage(span.math, 624, 648);
   }
   return new TextRun({
     text: span.text,
@@ -131,7 +127,7 @@ function imageScale(image: EmbeddedImage, maxWidthPx: number, maxHeightPx: numbe
 function wordImage(image: EmbeddedImage, maxWidthPx = 624, maxHeightPx = 648): ImageRun {
   if (!image.data || !image.mimeType) throw new Error(`Image data is unavailable: ${image.source}`);
   const type = image.mimeType.split("/")[1] as "png" | "jpg" | "gif" | "bmp";
-  const limits = image.source.startsWith("math-display:") ? { width: Math.min(maxWidthPx, 520), height: Math.min(maxHeightPx, WORD_DISPLAY_MATH_HEIGHT) } : { width: maxWidthPx, height: maxHeightPx };
+  const limits = image.source.startsWith("math-display:") ? { width: Math.min(maxWidthPx, 624), height: maxHeightPx } : { width: maxWidthPx, height: maxHeightPx };
   return new ImageRun({ data: new Uint8Array(image.data), type, transformation: imageScale(image, limits.width, limits.height), altText: { title: image.alt, description: image.alt, name: image.alt } });
 }
 
@@ -295,7 +291,13 @@ function tokens(state: PdfState, spans: InlineSpan[], force?: { bold?: boolean; 
   }
   return result;
 }
-function tokenWidth(item: PdfToken): number { return item.image ? INLINE_MATH_HEIGHT * ((item.image.width ?? INLINE_MATH_HEIGHT) / (item.image.height ?? INLINE_MATH_HEIGHT)) : item.font.widthOfTextAtSize(item.text, FONT_SIZE); }
+function pdfMathSize(image: EmbeddedImage, maxWidth = CONTENT_WIDTH, maxHeight = PAGE_HEIGHT - MARGIN * 2, fontScale = 1): { width: number; height: number } {
+  const naturalWidth = (image.width ?? 16) * PDF_MATH_SCALE * fontScale;
+  const naturalHeight = (image.height ?? 16) * PDF_MATH_SCALE * fontScale;
+  const scale = Math.min(1, maxWidth / naturalWidth, maxHeight / naturalHeight);
+  return { width: naturalWidth * scale, height: naturalHeight * scale };
+}
+function tokenWidth(item: PdfToken): number { return item.image ? pdfMathSize(item.image).width : item.font.widthOfTextAtSize(item.text, FONT_SIZE); }
 function lineWidth(items: PdfToken[]): number { return items.reduce((sum, item) => sum + tokenWidth(item), 0); }
 function richLines(items: PdfToken[], firstWidth: number, laterWidth: number): PdfToken[][] {
   const lines: PdfToken[][] = [[]]; let width = 0;
@@ -308,24 +310,26 @@ function richLines(items: PdfToken[], firstWidth: number, laterWidth: number): P
   }
   return lines;
 }
-function ensurePdfSpace(state: PdfState, lines = 1): void { if (state.y - (lines - 1) * LINE_HEIGHT - FONT_SIZE < MARGIN) addPdfPage(state); }
 function drawRich(state: PdfState, spans: InlineSpan[], options: { align?: "left" | "center"; firstIndent?: number; hanging?: number; bold?: boolean; italic?: boolean } = {}): void {
   const firstIndent = options.firstIndent ?? 0, hanging = options.hanging ?? 0;
   const lines = richLines(tokens(state, spans, options), CONTENT_WIDTH - firstIndent, CONTENT_WIDTH - hanging);
   lines.forEach((line, index) => {
-    ensurePdfSpace(state);
+    const mathHeight = Math.max(0, ...line.map((item) => item.image ? pdfMathSize(item.image).height : 0));
+    const lineHeight = Math.max(LINE_HEIGHT, mathHeight + 4);
+    if (state.y - Math.max(FONT_SIZE, mathHeight) < MARGIN) addPdfPage(state);
     let x = MARGIN + (index === 0 ? firstIndent : hanging);
     if (options.align === "center") x = (PAGE_WIDTH - lineWidth(line)) / 2;
     for (const item of line) {
       const width = tokenWidth(item);
       if (item.image) {
         const embedded = state.mathImages.get(item.image.source); if (!embedded) throw new Error(`Math image was not prepared: ${item.image.alt}`);
-        state.page.drawImage(embedded, { x, y: state.y - 1, width, height: INLINE_MATH_HEIGHT });
+        const size = pdfMathSize(item.image);
+        state.page.drawImage(embedded, { x, y: state.y - Math.max(1, (size.height - FONT_SIZE) / 2), width: size.width, height: size.height });
       } else state.page.drawText(item.text, { x, y: state.y + (item.superscript ? 5 : 0), size: item.superscript ? 8 : FONT_SIZE, font: item.font, color: rgb(0, 0, 0) });
       if (item.strike) state.page.drawLine({ start: { x, y: state.y + 4 }, end: { x: x + width, y: state.y + 4 }, thickness: 0.7, color: rgb(0, 0, 0) });
       x += width;
     }
-    state.y -= LINE_HEIGHT;
+    state.y -= lineHeight;
   });
 }
 function drawText(state: PdfState, text: string, options: Parameters<typeof drawRich>[2] = {}): void { drawRich(state, [{ text }], options); }
@@ -349,9 +353,10 @@ async function pdfImage(state: PdfState, image: EmbeddedImage): Promise<PDFImage
 }
 async function drawPdfImage(state: PdfState, image: EmbeddedImage, maxWidth = CONTENT_WIDTH, maxHeight?: number): Promise<void> {
   const embedded = await pdfImage(state, image);
-  const availableHeight = image.source.startsWith("math-display:") ? Math.min(DISPLAY_MATH_HEIGHT, maxHeight ?? DISPLAY_MATH_HEIGHT) : maxHeight ?? Math.max(72, state.y - MARGIN - LINE_HEIGHT);
-  const scale = Math.min(1, maxWidth / embedded.width, availableHeight / embedded.height);
-  const width = embedded.width * scale, height = embedded.height * scale;
+  const availableHeight = maxHeight ?? Math.max(72, state.y - MARGIN - LINE_HEIGHT);
+  const { width, height } = image.source.startsWith("math-display:")
+    ? pdfMathSize(image, maxWidth, availableHeight)
+    : (() => { const scale = Math.min(1, maxWidth / embedded.width, availableHeight / embedded.height); return { width: embedded.width * scale, height: embedded.height * scale }; })();
   if (state.y - height < MARGIN) addPdfPage(state);
   state.page.drawImage(embedded, { x: (PAGE_WIDTH - width) / 2, y: state.y - height, width, height });
   state.y -= height + LINE_HEIGHT;
@@ -458,21 +463,22 @@ async function toIeeePdf(rendered: RenderedDocument): Promise<ArrayBuffer> {
   const margin = 54, gap = 18, columnWidth = (612 - margin * 2 - gap) / 2;
   let y = 738, column = 0;
   const fontFor = (span: InlineSpan, bold = false) => (bold || span.bold) && span.italic ? fonts.boldItalic : bold || span.bold ? fonts.bold : span.italic ? fonts.italic : span.code ? fonts.code : fonts.regular;
+  const ieeeMathSize = (image: EmbeddedImage, size: number, maxWidth = 504) => pdfMathSize(image, maxWidth, 684, size / FONT_SIZE);
   const linesFor = (spans: InlineSpan[], width: number, size: number, bold = false): PdfToken[][] => {
     const items: PdfToken[] = [];
     spans.forEach((span) => { if (span.math) items.push({ text: "", font: fonts.regular, image: span.math }); else span.text.replace(/\s+/g, " ").split(/(\s+)/).filter(Boolean).forEach((text) => items.push({ text, font: supportedPdfFont(fontFor(span, bold), fonts.regular, text), strike: span.strike })); });
     const lines: PdfToken[][] = [[]]; let used = 0;
-    for (const item of items) { const w = item.image ? size * 1.2 * ((item.image.width ?? size) / (item.image.height ?? size)) : item.font.widthOfTextAtSize(item.text, size); if (used + w > width && lines[lines.length - 1].some((token) => token.text.trim() || token.image)) { lines.push([]); used = 0; if (!item.text.trim() && !item.image) continue; } lines[lines.length - 1].push(item); used += w; }
+    for (const item of items) { const w = item.image ? ieeeMathSize(item.image, size, width).width : item.font.widthOfTextAtSize(item.text, size); if (used + w > width && lines[lines.length - 1].some((token) => token.text.trim() || token.image)) { lines.push([]); used = 0; if (!item.text.trim() && !item.image) continue; } lines[lines.length - 1].push(item); used += w; }
     return lines;
   };
   const drawFull = (spans: InlineSpan[], size: number, options: { bold?: boolean; center?: boolean } = {}) => {
-    for (const line of linesFor(spans, 504, size, options.bold)) { let x = margin; const width = line.reduce((sum, item) => sum + (item.image ? size * 1.2 * ((item.image.width ?? size) / (item.image.height ?? size)) : item.font.widthOfTextAtSize(item.text, size)), 0); if (options.center) x = (612 - width) / 2; for (const item of line) { const w = item.image ? size * 1.2 * ((item.image.width ?? size) / (item.image.height ?? size)) : item.font.widthOfTextAtSize(item.text, size); if (item.image) { const embedded = mathImages.get(item.image.source); if (embedded) page.drawImage(embedded, { x, y: y - 2, width: w, height: size * 1.2 }); } else page.drawText(item.text, { x, y, size, font: item.font }); x += w; } y -= size + 3; }
+    for (const line of linesFor(spans, 504, size, options.bold)) { let x = margin; const width = line.reduce((sum, item) => sum + (item.image ? ieeeMathSize(item.image, size).width : item.font.widthOfTextAtSize(item.text, size)), 0); if (options.center) x = (612 - width) / 2; let lineHeight = size + 3; for (const item of line) { const mathSize = item.image ? ieeeMathSize(item.image, size) : undefined; const w = mathSize?.width ?? item.font.widthOfTextAtSize(item.text, size); if (item.image) { const embedded = mathImages.get(item.image.source); if (embedded && mathSize) page.drawImage(embedded, { x, y: y - Math.max(1, (mathSize.height - size) / 2), width: w, height: mathSize.height }); lineHeight = Math.max(lineHeight, (mathSize?.height ?? size) + 3); } else page.drawText(item.text, { x, y, size, font: item.font }); x += w; } y -= lineHeight; }
   };
   const nextColumn = () => { if (column === 0) { column = 1; y = 738; } else { page = pdf.addPage([612, 792]); column = 0; y = 738; } };
   const drawColumn = (spans: InlineSpan[], options: { bold?: boolean; center?: boolean; indent?: number; size?: number } = {}) => {
     const size = options.size ?? 10, indent = options.indent ?? 0;
     const lines = linesFor(spans, columnWidth - indent, size, options.bold);
-    for (const [index, line] of lines.entries()) { if (y - 13 < margin) nextColumn(); let x = margin + column * (columnWidth + gap) + (index === 0 ? indent : 0); const width = line.reduce((sum, item) => sum + (item.image ? size * 1.2 * ((item.image.width ?? size) / (item.image.height ?? size)) : item.font.widthOfTextAtSize(item.text, size)), 0); if (options.center) x += (columnWidth - width) / 2; for (const item of line) { const w = item.image ? size * 1.2 * ((item.image.width ?? size) / (item.image.height ?? size)) : item.font.widthOfTextAtSize(item.text, size); if (item.image) { const embedded = mathImages.get(item.image.source); if (embedded) page.drawImage(embedded, { x, y: y - 2, width: w, height: size * 1.2 }); } else page.drawText(item.text, { x, y, size, font: item.font }); x += w; } y -= 12; }
+    for (const [index, line] of lines.entries()) { const maxMathHeight = Math.max(0, ...line.map((item) => item.image ? ieeeMathSize(item.image, size, columnWidth).height : 0)); const lineHeight = Math.max(12, maxMathHeight + 2); if (y - lineHeight < margin) nextColumn(); let x = margin + column * (columnWidth + gap) + (index === 0 ? indent : 0); const width = line.reduce((sum, item) => sum + (item.image ? ieeeMathSize(item.image, size, columnWidth).width : item.font.widthOfTextAtSize(item.text, size)), 0); if (options.center) x += (columnWidth - width) / 2; for (const item of line) { const mathSize = item.image ? ieeeMathSize(item.image, size, columnWidth) : undefined; const w = mathSize?.width ?? item.font.widthOfTextAtSize(item.text, size); if (item.image) { const embedded = mathImages.get(item.image.source); if (embedded && mathSize) page.drawImage(embedded, { x, y: y - Math.max(1, (mathSize.height - size) / 2), width: w, height: mathSize.height }); } else page.drawText(item.text, { x, y, size, font: item.font }); x += w; } y -= lineHeight; }
   };
   drawFull([{ text: rendered.title }], 16, { center: true }); y -= 3;
   rendered.authors.forEach((author) => drawFull([{ text: author }], 11, { center: true }));

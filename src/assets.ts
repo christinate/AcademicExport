@@ -97,15 +97,25 @@ async function renderMath(source: string, display: boolean): Promise<{ data: Arr
   const markup = mathAdaptor.outerHTML(node);
   const svgStart = markup.indexOf("<svg"), svgEnd = markup.lastIndexOf("</svg>");
   if (svgStart < 0 || svgEnd < 0) throw new Error(`MathJax could not render: ${source}`);
-  const svg = markup.slice(svgStart, svgEnd + 6).replace(/currentColor/g, "#000000");
+  let svg = markup.slice(svgStart, svgEnd + 6).replace(/currentColor/g, "#000000");
   const viewBox = /viewBox="[^ ]+ [^ ]+ ([^ ]+) ([^"]+)"/.exec(svg);
   const ratio = viewBox ? Number(viewBox[1]) / Number(viewBox[2]) : Math.max(1, source.length / 4);
-  const height = display ? 96 : 40, width = Math.max(8, Math.min(1800, Math.round(height * ratio)));
+  // MathJax reports every formula in ex units. Using the same pixels-per-ex
+  // scale preserves a consistent character size: fractions become naturally
+  // taller than simple equations instead of being squeezed into a fixed box.
+  const exWidth = Number(/\bwidth="([\d.]+)ex"/.exec(svg)?.[1]);
+  const exHeight = Number(/\bheight="([\d.]+)ex"/.exec(svg)?.[1]);
+  const pixelsPerEx = 8, rasterScale = 2;
+  const logicalHeight = Number.isFinite(exHeight) ? exHeight * pixelsPerEx : (display ? 24 : 16);
+  const logicalWidth = Number.isFinite(exWidth) ? exWidth * pixelsPerEx : logicalHeight * ratio;
+  const width = Math.max(8, Math.min(3600, Math.ceil(logicalWidth * rasterScale)));
+  const height = Math.max(8, Math.min(2400, Math.ceil(logicalHeight * rasterScale)));
+  svg = svg.replace(/\bwidth="[^"]+"/, `width="${width}px"`).replace(/\bheight="[^"]+"/, `height="${height}px"`);
   const image = new Image();
   const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
   try {
     await new Promise<void>((resolve, reject) => { image.onload = () => resolve(); image.onerror = () => reject(new Error(`Rendered math image could not be loaded: ${source}`)); image.src = url; });
-    const canvas = createEl("canvas"); canvas.width = width * 2; canvas.height = height * 2;
+    const canvas = createEl("canvas"); canvas.width = width; canvas.height = height;
     const context = canvas.getContext("2d"); if (!context) throw new Error("Math rendering is unavailable in this Obsidian window.");
     context.fillStyle = "#ffffff"; context.fillRect(0, 0, canvas.width, canvas.height); context.drawImage(image, 0, 0, canvas.width, canvas.height);
     const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
@@ -125,7 +135,7 @@ async function renderMath(source: string, display: boolean): Promise<{ data: Arr
     croppedContext.fillStyle = "#ffffff"; croppedContext.fillRect(0, 0, cropped.width, cropped.height);
     croppedContext.drawImage(canvas, left, top, cropped.width, cropped.height, 0, 0, cropped.width, cropped.height);
     const blob = await new Promise<Blob>((resolve, reject) => cropped.toBlob((value) => value ? resolve(value) : reject(new Error("Math PNG creation failed.")), "image/png"));
-    return { data: await blob.arrayBuffer(), mimeType: "image/png", width: cropped.width, height: cropped.height };
+    return { data: await blob.arrayBuffer(), mimeType: "image/png", width: cropped.width / rasterScale, height: cropped.height / rasterScale };
   } finally { URL.revokeObjectURL(url); }
 }
 
