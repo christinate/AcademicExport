@@ -1,0 +1,11 @@
+{
+  "id": "academic-export",
+  "name": "Academic Export",
+  "version": "0.1.0",
+  "minAppVersion": "1.13.0",
+  "description": "Export notes in organization-defined document styles and multiple file types.",
+  "author": "christinate",
+  "authorUrl": "https://github.com/christinate",
+  "fundingUrl": "https://ko-fi.com/christinate",
+  "isDesktopOnly": false
+}

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "apa-7-professional",
+  "name": "APA 7 Professional",
+  "description": "APA Seventh Edition professional paper.",
+  "templateFile": "templates/apa-7-professional.md",
+  "fields": [
+    { "key": "Title", "label": "Title", "type": "string", "required": true, "description": "Full paper title." },
+    { "key": "ShortTitle", "label": "Running head", "type": "string", "required": true, "description": "Abbreviated title for the running head.", "aliases": ["RunningHead"] },
+    { "key": "Author", "label": "Author", "type": "string-list", "required": true, "description": "Author name or names.", "aliases": ["Authors"] },
+    { "key": "Affiliation", "label": "Affiliation", "type": "string", "required": true, "description": "Institutional affiliation." },
+    { "key": "AuthorNote", "label": "Author note", "type": "markdown", "required": false, "description": "ORCID, affiliation changes, disclosures, acknowledgements, and contact information." },
+    { "key": "Abstract", "label": "Abstract", "type": "markdown", "required": true, "description": "Concise paper summary." },
+    { "key": "Keywords", "label": "Keywords", "type": "string-list", "required": true, "description": "Search keywords." },
+    { "key": "References", "label": "References", "type": "markdown", "required": true, "description": "Reference list; may be empty." }
+  ],
+  "options": [
+    { "key": "includeTitlePage", "label": "Include title page", "description": "Create the professional title page.", "default": true },
+    { "key": "includeAbstract", "label": "Include abstract", "description": "Create the abstract and keywords page.", "default": true },
+    { "key": "includeAuthorNote", "label": "Include author note", "description": "Include the author note on the title page.", "default": true }
+  ],
+  "rules": { "size": "letter", "marginInches": 1, "fontFamily": "Times New Roman", "fontSizePoints": 12, "lineSpacing": 2, "paragraphIndentInches": 0.5, "pageNumbers": true, "runningHead": true },
+  "sections": [
+    { "key": "Abstract", "label": "Abstract", "required": true, "pageBreakBefore": true },
+    { "key": "Body", "label": "Paper body", "required": true, "pageBreakBefore": true },
+    { "key": "References", "label": "References", "required": true, "pageBreakBefore": true }
+  ],
+  "variants": [
+    { "id": "general-professional", "name": "General Professional Manuscript", "description": "Professional manuscript with journal-appropriate sections.", "recommendedSections": ["Abstract", "References"], "abstractDefault": true },
+    { "id": "literature-review", "name": "Literature Review", "description": "Professional synthesis and evaluation of a research literature.", "recommendedSections": ["Abstract", "Thematic Review", "Discussion", "References"], "abstractDefault": true },
+    { "id": "mixed-methods", "name": "Mixed Methods Study", "description": "Integrated qualitative and quantitative research report.", "recommendedSections": ["Abstract", "Method", "Quantitative Strand", "Qualitative Strand", "Integration", "Results", "Discussion", "References"], "abstractDefault": true },
+    { "id": "qualitative", "name": "Qualitative Study", "description": "Qualitative research report with design, participants, analysis, and findings.", "recommendedSections": ["Abstract", "Method", "Study Design", "Participants", "Data Collection", "Data Analysis", "Findings", "Discussion", "References"], "abstractDefault": true },
+    { "id": "quantitative", "name": "Quantitative Study", "description": "Quantitative research report with method, results, and discussion.", "recommendedSections": ["Abstract", "Method", "Participants", "Materials", "Procedure", "Results", "Discussion", "References"], "abstractDefault": true },
+    { "id": "review", "name": "Review Article", "description": "Professional critical or integrative review article.", "recommendedSections": ["Abstract", "Review", "Implications", "Conclusion", "References"], "abstractDefault": true }
+  ]
+}

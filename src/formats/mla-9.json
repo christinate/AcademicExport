@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "mla-9",
+  "name": "MLA 9",
+  "description": "MLA Ninth Edition student research paper.",
+  "templateFile": "templates/mla-9.md",
+  "fields": [
+    { "key": "Title", "label": "Title", "type": "string", "required": true, "description": "Full paper title." },
+    { "key": "Author", "label": "Author", "type": "string-list", "required": true, "description": "Student author name.", "aliases": ["Authors"] },
+    { "key": "Instructor", "label": "Instructor", "type": "string", "required": true, "description": "Instructor name." },
+    { "key": "Course", "label": "Course", "type": "string", "required": true, "description": "Course number and name." },
+    { "key": "DueDate", "label": "Date", "type": "date", "required": true, "description": "Submission date.", "aliases": ["Date"] },
+    { "key": "References", "label": "Works Cited", "type": "markdown", "required": true, "description": "Works-cited entries; may be empty.", "aliases": ["WorksCited"] }
+  ],
+  "options": [
+    { "key": "includeFirstPageHeading", "label": "Include first-page heading", "description": "Include author, instructor, course, and date above the paper title.", "default": true }
+  ],
+  "rules": { "size": "letter", "marginInches": 1, "fontFamily": "Times New Roman", "fontSizePoints": 12, "lineSpacing": 2, "paragraphIndentInches": 0.5, "pageNumbers": true, "runningHead": true },
+  "sections": [
+    { "key": "Body", "label": "Paper body", "required": true },
+    { "key": "References", "label": "Works Cited", "required": true, "pageBreakBefore": true }
+  ],
+  "variants": [
+    { "id": "general-research-paper", "name": "General Research Paper", "description": "Standard MLA course research paper.", "recommendedSections": [], "abstractDefault": false },
+    { "id": "literary-analysis", "name": "Literary Analysis", "description": "Close reading or literary argument with instructor-defined sections.", "recommendedSections": [], "abstractDefault": false },
+    { "id": "comparative-essay", "name": "Comparative Essay", "description": "Comparative argument organized by topics or works.", "recommendedSections": ["First Point of Comparison", "Second Point of Comparison", "Conclusion"], "abstractDefault": false },
+    { "id": "annotated-bibliography", "name": "Annotated Bibliography", "description": "MLA works-cited entries followed by annotations.", "recommendedSections": [], "abstractDefault": false }
+  ]
+}

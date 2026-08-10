@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1, "id": "ama-11", "name": "AMA 11", "description": "AMA Eleventh Edition student medical manuscript.", "templateFile": "templates/ama-11.md",
+  "fields": [
+    { "key": "Title", "label": "Title", "type": "string", "required": true, "description": "Concise manuscript title." },
+    { "key": "ShortTitle", "label": "Short title", "type": "string", "required": true, "description": "Running head." },
+    { "key": "Author", "label": "Author", "type": "string-list", "required": true, "description": "Author name and degrees as required." },
+    { "key": "Affiliation", "label": "Affiliation", "type": "string", "required": true, "description": "Institutional affiliation." },
+    { "key": "Course", "label": "Course", "type": "string", "required": false, "description": "Course information." },
+    { "key": "Instructor", "label": "Instructor", "type": "string", "required": false, "description": "Instructor name." },
+    { "key": "DueDate", "label": "Date", "type": "date", "required": false, "description": "Submission date.", "aliases": ["Date"] },
+    { "key": "Abstract", "label": "Abstract", "type": "markdown", "required": true, "description": "Structured or unstructured abstract." },
+    { "key": "Importance", "label": "Importance", "type": "markdown", "required": false, "description": "Structured abstract importance statement." },
+    { "key": "Objective", "label": "Objective", "type": "markdown", "required": false, "description": "Structured abstract objective." },
+    { "key": "DesignSettingParticipants", "label": "Design, setting, and participants", "type": "markdown", "required": false, "description": "Structured abstract design, setting, and participant details." },
+    { "key": "MainOutcomesMeasures", "label": "Main outcomes and measures", "type": "markdown", "required": false, "description": "Structured abstract outcomes and measures." },
+    { "key": "Results", "label": "Results", "type": "markdown", "required": false, "description": "Structured abstract results." },
+    { "key": "ConclusionsRelevance", "label": "Conclusions and relevance", "type": "markdown", "required": false, "description": "Structured abstract conclusions and relevance." },
+    { "key": "Keywords", "label": "Keywords", "type": "string-list", "required": false, "description": "Three to ten keywords." },
+    { "key": "References", "label": "References", "type": "markdown", "required": true, "description": "Numbered references in citation order." }
+  ],
+  "options": [{ "key": "includeTitlePage", "label": "Include Liberty title page", "description": "Include the course-paper title page used by the supplied Liberty templates.", "default": true }, { "key": "includeAbstract", "label": "Include abstract", "description": "Include the selected abstract type.", "default": true }],
+  "rules": { "size": "letter", "marginInches": 1, "fontFamily": "Times New Roman", "fontSizePoints": 12, "lineSpacing": 2, "paragraphIndentInches": 0.5, "pageNumbers": true, "runningHead": true },
+  "sections": [{ "key": "Abstract", "label": "Abstract", "required": true, "pageBreakBefore": true }, { "key": "Body", "label": "Manuscript body", "required": true }, { "key": "References", "label": "References", "required": true, "pageBreakBefore": true }],
+  "variants": [{ "id": "structured-abstract", "name": "Structured Abstract", "description": "Original research, systematic review, or clinical review.", "recommendedSections": ["Introduction", "Methods", "Results", "Discussion", "Conclusion"], "abstractDefault": true }, { "id": "unstructured-abstract", "name": "Unstructured Abstract", "description": "Course paper not requiring a structured research abstract.", "recommendedSections": ["Introduction", "Conclusion"], "abstractDefault": true }]
+}

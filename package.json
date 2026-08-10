@@ -1,0 +1,48 @@
+{
+  "name": "academic-export",
+  "version": "0.1.0",
+  "description": "A modular, cross-platform export plugin for Obsidian.",
+  "main": "main.js",
+  "type": "module",
+  "engines": { "node": ">=20.19.0" },
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc --noEmit && node esbuild.config.mjs production",
+    "lint": "eslint src --max-warnings=0",
+    "test": "vitest run",
+    "version": "node version-bump.mjs && git add manifest.json versions.json"
+  },
+  "keywords": [
+    "obsidian",
+    "export",
+    "apa",
+    "docx",
+    "pdf"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/christinate/AcademicExport",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/christinate/AcademicExport.git"
+  },
+  "funding": "https://ko-fi.com/christinate",
+  "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
+    "docx": "^9.5.1",
+    "mathjax-full": "^3.2.2",
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.32.0",
+    "@types/node": "^24.1.0",
+    "esbuild": "^0.25.8",
+    "eslint": "^9.32.0",
+    "eslint-plugin-obsidianmd": "^0.4.1",
+    "globals": "^16.3.0",
+    "obsidian": "latest",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.38.0",
+    "vitest": "^3.2.4"
+  }
+}

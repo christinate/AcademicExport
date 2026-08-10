@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1, "id": "chicago-18", "name": "Chicago 18", "description": "Chicago Manual of Style, Eighteenth Edition student paper.", "templateFile": "templates/chicago-18.md",
+  "fields": [
+    { "key": "Title", "label": "Title", "type": "string", "required": true, "description": "Paper title." },
+    { "key": "Author", "label": "Author", "type": "string-list", "required": true, "description": "Author name." },
+    { "key": "Course", "label": "Course", "type": "string", "required": true, "description": "Course name and number." },
+    { "key": "Instructor", "label": "Instructor", "type": "string", "required": true, "description": "Instructor name." },
+    { "key": "DueDate", "label": "Date", "type": "date", "required": true, "description": "Submission date.", "aliases": ["Date"] },
+    { "key": "References", "label": "Bibliography or References", "type": "markdown", "required": true, "description": "One source-list entry per paragraph." }
+  ],
+  "options": [{ "key": "includeTitlePage", "label": "Include title page", "description": "Create a Chicago-style title page.", "default": true }],
+  "rules": { "size": "letter", "marginInches": 1, "fontFamily": "Times New Roman", "fontSizePoints": 12, "lineSpacing": 2, "paragraphIndentInches": 0.5, "pageNumbers": true, "runningHead": false },
+  "sections": [{ "key": "Body", "label": "Paper body", "required": true }, { "key": "References", "label": "Source list", "required": true, "pageBreakBefore": true }],
+  "variants": [
+    { "id": "notes-bibliography", "name": "Notes and Bibliography", "description": "Humanities system using numbered notes and a bibliography.", "recommendedSections": [], "abstractDefault": false },
+    { "id": "author-date", "name": "Author-Date", "description": "Sciences and social-sciences system using parenthetical citations and references.", "recommendedSections": [], "abstractDefault": false }
+  ]
+}
