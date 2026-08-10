@@ -23,7 +23,7 @@ export class ExportSettingTab extends PluginSettingTab {
         aliases: [format.name, "output type"],
         control: { type: "toggle", key: `${FORMAT_PREFIX}${format.id}:output:${type}` }
       });
-      definitions.push({ type: "group", heading: format.name, cls: "academic-export-settings-card", items: availability });
+      definitions.push({ type: "group", heading: format.name, items: availability });
 
       if (format.options.length) {
         const optionTitle = format.id === "apa-7-student" ? "APA Student 7 format" : format.id === "apa-7-professional" ? "APA Professional 7 format" : `${format.name} format`;
@@ -40,11 +40,11 @@ export class ExportSettingTab extends PluginSettingTab {
           aliases: [format.name, "format option"],
           control: { type: "toggle", key: `${FORMAT_PREFIX}${format.id}:option:${option.key}` }
         });
-        definitions.push({ type: "group", heading: optionTitle, cls: "academic-export-settings-card", items: optionItems });
+        definitions.push({ type: "group", heading: optionTitle, items: optionItems });
       }
     }
 
-    definitions.push({ type: "group", heading: "Behavior", cls: "academic-export-settings-card", items: [{
+    definitions.push({ type: "group", heading: "Behavior", items: [{
       name: "Enable automatic exporting",
       desc: "Export immediately when configured choices are valid; otherwise open the selection popup with missing-field warnings.",
       control: { type: "toggle", key: "autoDefaultExporting" }
