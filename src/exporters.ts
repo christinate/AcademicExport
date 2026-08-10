@@ -20,8 +20,8 @@ const HALF_POINTS = 24;
 const DOUBLE_LINE = 480;
 const HALF_INCH = 720;
 const CONTENT_DXA = 9360;
-const INLINE_MATH_HEIGHT = 12;
-const DISPLAY_MATH_HEIGHT = 24;
+const INLINE_MATH_HEIGHT = 18;
+const DISPLAY_MATH_HEIGHT = 36;
 const spansText = (spans: InlineSpan[]) => spans.map((span) => span.text).join("");
 
 function wordRun(span: InlineSpan, overrides: { bold?: boolean; italic?: boolean } = {}): TextRun | ImageRun {

@@ -1,9 +1,6 @@
 import { MarkdownView, Notice, Plugin, TFile, TFolder, normalizePath } from "obsidian";
-import { PDFDocument } from "pdf-lib";
 import type { Menu, TAbstractFile } from "obsidian";
 import { safeFilename, saveArtifacts } from "./destination";
-import { resolveDocumentImages } from "./assets";
-import { exportArtifact } from "./exporters";
 import { FORMAT_BY_ID } from "./formats";
 import { ConfirmReplaceModal, ExportModal, FormatPickerModal, PaperTypePickerModal, type ExportSelection } from "./modals";
 import { missingFields, parseNote } from "./note";
@@ -52,6 +49,7 @@ export default class AcademicExportPlugin extends Plugin {
       const source = view?.file?.path === file.path ? view.editor.getValue() : await this.app.vault.read(file);
       const preference = this.settings.formats[format.id];
       const rendered = renderDocument(parseNote(source), format, preference.defaultVariant, preference.options);
+      const [{ resolveDocumentImages }, { exportArtifact }, { PDFDocument }] = await Promise.all([import("./assets"), import("./exporters"), import("pdf-lib")]);
       await resolveDocumentImages(this.app, file, rendered);
       const artifact = await exportArtifact("pdf", rendered, format);
       const pages = (await PDFDocument.load(artifact.data)).getPageCount();
@@ -90,6 +88,7 @@ export default class AcademicExportPlugin extends Plugin {
     try {
       const parsed = parseNote(await this.app.vault.read(file));
       const rendered = renderDocument(parsed, selection.format, selection.variantId, selection.options);
+      const [{ resolveDocumentImages }, { exportArtifact }] = await Promise.all([import("./assets"), import("./exporters")]);
       await resolveDocumentImages(this.app, file, rendered);
       const artifacts = await Promise.all(selection.outputTypes.map((type) => exportArtifact(type, rendered, selection.format)));
       const paths = await saveArtifacts(this.app, this.settings.defaultSaveLocation, safeFilename(rendered.title), artifacts);
