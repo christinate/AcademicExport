@@ -1,4 +1,4 @@
-import { finishRenderMath, renderMath as renderObsidianMath, type App, type TFile } from "obsidian";
+import { finishRenderMath, loadMathJax, renderMath as renderObsidianMath, type App, type TFile } from "obsidian";
 import type { ContentBlock, EmbeddedImage, RenderedDocument } from "./render";
 
 const MIME_BY_EXTENSION: Record<string, EmbeddedImage["mimeType"]> = {
@@ -8,6 +8,8 @@ const MIME_BY_EXTENSION: Record<string, EmbeddedImage["mimeType"]> = {
   gif: "image/gif",
   bmp: "image/bmp"
 };
+
+let mathJaxReady: Promise<void> | null = null;
 
 interface CanvasNode { id: string; type: string; x: number; y: number; width: number; height: number; text?: string; file?: string; url?: string; label?: string; color?: string; }
 interface CanvasEdge { fromNode: string; toNode: string; label?: string; }
@@ -77,6 +79,8 @@ function imagesInBlocks(blocks: ContentBlock[]): EmbeddedImage[] {
 }
 
 async function renderMath(source: string, display: boolean): Promise<{ data: ArrayBuffer; mimeType: "image/png"; width: number; height: number }> {
+  mathJaxReady ??= loadMathJax();
+  await mathJaxReady;
   const rendered = renderObsidianMath(source, display);
   await finishRenderMath();
   const markup = rendered.outerHTML;
