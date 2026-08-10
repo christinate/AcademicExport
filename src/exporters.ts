@@ -6,10 +6,10 @@ import {
 import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import type { PDFFont, PDFImage, PDFPage } from "pdf-lib";
-import serifRegular from "../assets/fonts/LiberationSerif-Regular.ttf?inline";
-import serifBold from "../assets/fonts/LiberationSerif-Bold.ttf?inline";
-import serifItalic from "../assets/fonts/LiberationSerif-Italic.ttf?inline";
-import serifBoldItalic from "../assets/fonts/LiberationSerif-BoldItalic.ttf?inline";
+import serifRegular from "../assets/fonts/LiberationSerif-Regular.woff2?inline";
+import serifBold from "../assets/fonts/LiberationSerif-Bold.woff2?inline";
+import serifItalic from "../assets/fonts/LiberationSerif-Italic.woff2?inline";
+import serifBoldItalic from "../assets/fonts/LiberationSerif-BoldItalic.woff2?inline";
 import type { OutputType } from "./config";
 import type { DocumentFormat } from "./types";
 import type { AddendumPage, ContentBlock, EmbeddedImage, InlineSpan, MarkdownTable, RenderedDocument } from "./render";

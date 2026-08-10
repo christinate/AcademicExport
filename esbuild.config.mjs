@@ -30,7 +30,7 @@ const context = await esbuild.context({
   sourcemap: production ? false : "inline",
   treeShaking: true,
   plugins: [safeDocxPolyfills],
-  loader: { ".md": "text", ".ttf": "base64" },
+  loader: { ".md": "text", ".ttf": "base64", ".woff2": "base64" },
   outfile: "main.js"
 });
 

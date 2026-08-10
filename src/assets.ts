@@ -1,5 +1,14 @@
-import { finishRenderMath, loadMathJax, renderMath as renderObsidianMath, type App, type TFile } from "obsidian";
+import type { App, TFile } from "obsidian";
 import type { ContentBlock, EmbeddedImage, RenderedDocument } from "./render";
+import { mathjax } from "mathjax-full/js/mathjax.js";
+import { TeX } from "mathjax-full/js/input/tex.js";
+import "mathjax-full/js/input/tex/ams/AmsConfiguration.js";
+import "mathjax-full/js/input/tex/newcommand/NewcommandConfiguration.js";
+import "mathjax-full/js/input/tex/noundefined/NoUndefinedConfiguration.js";
+import { SVG } from "mathjax-full/js/output/svg.js";
+import { liteAdaptor } from "mathjax-full/js/adaptors/liteAdaptor.js";
+import type { LiteElement } from "mathjax-full/js/adaptors/lite/Element.js";
+import { RegisterHTMLHandler } from "mathjax-full/js/handlers/html.js";
 
 const MIME_BY_EXTENSION: Record<string, EmbeddedImage["mimeType"]> = {
   png: "image/png",
@@ -8,8 +17,6 @@ const MIME_BY_EXTENSION: Record<string, EmbeddedImage["mimeType"]> = {
   gif: "image/gif",
   bmp: "image/bmp"
 };
-
-let mathJaxReady: Promise<void> | null = null;
 
 interface CanvasNode { id: string; type: string; x: number; y: number; width: number; height: number; text?: string; file?: string; url?: string; label?: string; color?: string; }
 interface CanvasEdge { fromNode: string; toNode: string; label?: string; }
@@ -78,12 +85,16 @@ function imagesInBlocks(blocks: ContentBlock[]): EmbeddedImage[] {
   return images;
 }
 
+const mathAdaptor = liteAdaptor();
+RegisterHTMLHandler(mathAdaptor);
+const mathDocument = mathjax.document("", {
+  InputJax: new TeX({ packages: ["base", "ams", "newcommand", "noundefined"] }),
+  OutputJax: new SVG({ fontCache: "none" })
+});
+
 async function renderMath(source: string, display: boolean): Promise<{ data: ArrayBuffer; mimeType: "image/png"; width: number; height: number }> {
-  mathJaxReady ??= loadMathJax();
-  await mathJaxReady;
-  const rendered = renderObsidianMath(source, display);
-  await finishRenderMath();
-  const markup = rendered.outerHTML;
+  const node = mathDocument.convert(source, { display }) as unknown as LiteElement;
+  const markup = mathAdaptor.outerHTML(node);
   const svgStart = markup.indexOf("<svg"), svgEnd = markup.lastIndexOf("</svg>");
   if (svgStart < 0 || svgEnd < 0) throw new Error(`MathJax could not render: ${source}`);
   const svg = markup.slice(svgStart, svgEnd + 6).replace(/currentColor/g, "#000000");
