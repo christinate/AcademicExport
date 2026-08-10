@@ -93,8 +93,24 @@ async function renderMath(source: string, display: boolean): Promise<{ data: Arr
     const canvas = createEl("canvas"); canvas.width = width * 2; canvas.height = height * 2;
     const context = canvas.getContext("2d"); if (!context) throw new Error("Math rendering is unavailable in this Obsidian window.");
     context.fillStyle = "#ffffff"; context.fillRect(0, 0, canvas.width, canvas.height); context.drawImage(image, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error("Math PNG creation failed.")), "image/png"));
-    return { data: await blob.arrayBuffer(), mimeType: "image/png", width: canvas.width, height: canvas.height };
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    let left = canvas.width, top = canvas.height, right = -1, bottom = -1;
+    for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
+      const offset = (y * canvas.width + x) * 4;
+      if (pixels[offset + 3] > 0 && (pixels[offset] < 245 || pixels[offset + 1] < 245 || pixels[offset + 2] < 245)) {
+        left = Math.min(left, x); top = Math.min(top, y); right = Math.max(right, x); bottom = Math.max(bottom, y);
+      }
+    }
+    if (right < left || bottom < top) throw new Error(`MathJax produced an empty image: ${source}`);
+    const padding = 4;
+    left = Math.max(0, left - padding); top = Math.max(0, top - padding);
+    right = Math.min(canvas.width - 1, right + padding); bottom = Math.min(canvas.height - 1, bottom + padding);
+    const cropped = createEl("canvas"); cropped.width = right - left + 1; cropped.height = bottom - top + 1;
+    const croppedContext = cropped.getContext("2d"); if (!croppedContext) throw new Error("Math cropping is unavailable in this Obsidian window.");
+    croppedContext.fillStyle = "#ffffff"; croppedContext.fillRect(0, 0, cropped.width, cropped.height);
+    croppedContext.drawImage(canvas, left, top, cropped.width, cropped.height, 0, 0, cropped.width, cropped.height);
+    const blob = await new Promise<Blob>((resolve, reject) => cropped.toBlob((value) => value ? resolve(value) : reject(new Error("Math PNG creation failed.")), "image/png"));
+    return { data: await blob.arrayBuffer(), mimeType: "image/png", width: cropped.width, height: cropped.height };
   } finally { URL.revokeObjectURL(url); }
 }
 
