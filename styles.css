@@ -1,5 +1,8 @@
 .academic-export-modal { max-width: 720px; }
 .academic-export-page-counter.is-hidden { display: none; }
+.academic-export-about-content .setting-item-info { color: var(--text-normal); font-size: var(--font-ui-medium); }
+.academic-export-about-content p { margin: 0 0 var(--size-4-3); }
+.academic-export-about-content p:last-child { margin-bottom: 0; }
 .academic-export-warning { background: var(--background-modifier-error); border-left: 4px solid var(--text-error); border-radius: var(--radius-s); color: var(--text-normal); margin-bottom: 1rem; padding: 0.75rem 1rem; }
 .academic-export-warning ul { margin-bottom: 0; }
 .academic-export-modal hr { border: 0; border-top: 1px solid var(--background-modifier-border); margin: 1.5rem 0; }

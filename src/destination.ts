@@ -7,7 +7,10 @@ export function safeFilename(value: string): string {
 }
 
 async function writeVault(app: App, folder: string, baseName: string, artifacts: ExportArtifact[]): Promise<string[]> {
-  const normalized = normalizePath(folder || "Exports");
+  const portableFolder = folder.replace(/\\/g, "/");
+  const normalized = /^[A-Za-z]:\//.test(portableFolder) || portableFolder.startsWith("/")
+    ? "Exports"
+    : normalizePath(folder || "Exports");
   if (!app.vault.getAbstractFileByPath(normalized)) await app.vault.createFolder(normalized);
   const paths: string[] = [];
   for (const artifact of artifacts) {
@@ -22,11 +25,57 @@ async function writeVault(app: App, folder: string, baseName: string, artifacts:
 }
 
 interface DesktopChoice { available: boolean; filePath?: string; }
+export interface DesktopFolderChoice { available: boolean; folderPath?: string; }
+
+interface DesktopDialog {
+  showOpenDialog(options: object): Promise<{ canceled: boolean; filePaths: string[] }>;
+  showSaveDialog(options: object): Promise<{ canceled: boolean; filePath?: string }>;
+}
+
+interface DesktopPath {
+  dirname(path: string): string;
+  isAbsolute(path: string): boolean;
+  join(...paths: string[]): string;
+}
+
+function getDesktopDialog(): DesktopDialog | undefined {
+  const electron = window.require?.("electron") as { remote?: { dialog: DesktopDialog } } | undefined;
+  return electron?.remote?.dialog;
+}
+
+function getDesktopPath(): DesktopPath | undefined {
+  return window.require?.("path") as DesktopPath | undefined;
+}
+
+function resolveDesktopFolder(app: App, folder: string, path: DesktopPath): string | null {
+  if (!(app.vault.adapter instanceof FileSystemAdapter)) return null;
+  if (folder && path.isAbsolute(folder)) return folder;
+  return path.join(app.vault.adapter.getBasePath(), folder || "Exports");
+}
+
+export async function chooseDesktopFolder(app: App, currentFolder: string): Promise<DesktopFolderChoice> {
+  if (!Platform.isDesktopApp) return { available: false };
+  try {
+    const dialog = getDesktopDialog();
+    const path = getDesktopPath();
+    if (!dialog || !path) return { available: false };
+    const defaultPath = resolveDesktopFolder(app, currentFolder, path);
+    if (!defaultPath) return { available: false };
+    const result = await dialog.showOpenDialog({
+      title: "Choose default save folder",
+      buttonLabel: "Select folder",
+      defaultPath,
+      properties: ["openDirectory", "createDirectory"]
+    });
+    return result.canceled ? { available: true } : { available: true, folderPath: result.filePaths[0] };
+  } catch {
+    return { available: false };
+  }
+}
 
 async function chooseDesktopPath(defaultPath: string, extension: string): Promise<DesktopChoice> {
   try {
-    const electron = window.require?.("electron") as { remote?: { dialog: { showSaveDialog: (options: object) => Promise<{ canceled: boolean; filePath?: string }> } } } | undefined;
-    const dialog = electron?.remote?.dialog;
+    const dialog = getDesktopDialog();
     if (!dialog) return { available: false };
     const result = await dialog.showSaveDialog({ defaultPath, filters: [{ name: `${extension.toUpperCase()} file`, extensions: [extension] }] });
     return result.canceled ? { available: true } : { available: true, filePath: result.filePath };
@@ -35,9 +84,12 @@ async function chooseDesktopPath(defaultPath: string, extension: string): Promis
 
 export async function saveArtifacts(app: App, folder: string, baseName: string, artifacts: ExportArtifact[]): Promise<string[]> {
   if (Platform.isDesktopApp && app.vault.adapter instanceof FileSystemAdapter) {
-    const fullDefault = `${app.vault.adapter.getBasePath()}/${folder}/${baseName}`;
+    const path = getDesktopPath();
+    if (!path) return writeVault(app, folder, baseName, artifacts);
+    const configuredFolder = resolveDesktopFolder(app, folder, path);
+    if (!configuredFolder) return writeVault(app, folder, baseName, artifacts);
+    const fullDefault = path.join(configuredFolder, baseName);
     const fs = window.require?.("fs") as { promises: { mkdir(path: string, options: { recursive: boolean }): Promise<void>; writeFile(path: string, data: Uint8Array): Promise<void> } };
-    const path = window.require?.("path") as { dirname(path: string): string };
     const results: string[] = [];
     for (const artifact of artifacts) {
       // Ask separately so replacing a PDF never silently authorizes replacing

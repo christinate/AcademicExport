@@ -2,7 +2,7 @@
 
 Academic Export is a cross-platform [Obsidian](https://obsidian.md) community plugin that turns Markdown notes into consistently styled documents. Choose APA 7, MLA 9, Chicago 18, IEEE Conference, Harvard Extension School Thesis, Harvard Author-Date, or AMA 11, then select a paper-type variant such as PDF, DOCX, or HTML and one of the options for that style.
 
-If you like it and want to help a student, please donate to my ko-fi here: https://ko-fi.com/christinate
+Show some love! If you like it and want to help a student, please donate to my ko-fi here: https://ko-fi.com/christinate
 
 ## What it does
 
@@ -116,7 +116,6 @@ The **Academic Export** community-plugin settings include:
 - **Page counter format**, which selects the document style used for that calculation. Clicking the status-bar counter shows where to change the setting.
 - **Author** and **Affiliation**, used to pre-fill those YAML properties in newly generated templates.
 - **Back up notes before replacement**.
-- GitHub and Ko-fi links in the About section.
 
 ## Installation
 

@@ -70,14 +70,22 @@ export default class AcademicExportPlugin extends Plugin {
       menu.addItem((item) => item.setTitle("Replace with template").setIcon("file-input").onClick(() => this.chooseReplacement(file)));
     } else if (file instanceof TFolder) menu.addItem((item) => item.setTitle("New export template").setIcon("file-plus").onClick(() => this.chooseNewTemplate(file)));
   }
-  private defaultSelection(): ExportSelection | null {
-    const formatId = Object.entries(this.settings.formats).find(([, value]) => value.enabled && value.default)?.[0];
-    const format = formatId ? FORMAT_BY_ID.get(formatId) : undefined;
-    const outputTypes = format ? Object.entries(this.settings.formats[format.id].outputTypes).filter(([, value]) => value.enabled && value.default).map(([key]) => key) as ExportSelection["outputTypes"] : [];
-    return format && outputTypes.length ? { format, variantId: this.settings.formats[format.id].defaultVariant, outputTypes, options: this.settings.formats[format.id].options } : null;
+  private automaticSelection(): ExportSelection | null {
+    const last = this.settings.lastExportSelection;
+    if (!last) return null;
+    const preference = this.settings.formats[last.formatId];
+    const format = preference?.enabled ? FORMAT_BY_ID.get(last.formatId) : undefined;
+    if (!format || !format.variants.some((variant) => variant.id === last.variantId)) return null;
+    const outputTypes = last.outputTypes.filter((type) => preference.outputTypes[type]?.enabled);
+    return outputTypes.length ? {
+      format,
+      variantId: last.variantId,
+      outputTypes,
+      options: { ...preference.options, ...last.options }
+    } : null;
   }
   async startExport(file: TFile): Promise<void> {
-    const selection = this.defaultSelection();
+    const selection = this.automaticSelection();
     if (this.settings.autoDefaultExporting && selection) {
       const parsed = parseNote(await this.app.vault.read(file));
       if (!missingFields(parsed, selection.format, selection.options).length) { await this.performExport(file, selection); return; }

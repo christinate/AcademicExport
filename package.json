@@ -1,6 +1,6 @@
 {
   "name": "academic-export",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A modular, cross-platform export plugin for Obsidian.",
   "main": "main.js",
   "type": "module",
