@@ -20,11 +20,13 @@ const HALF_POINTS = 24;
 const DOUBLE_LINE = 480;
 const HALF_INCH = 720;
 const CONTENT_DXA = 9360;
+const INLINE_MATH_HEIGHT = 12;
+const DISPLAY_MATH_HEIGHT = 36;
 const spansText = (spans: InlineSpan[]) => spans.map((span) => span.text).join("");
 
 function wordRun(span: InlineSpan, overrides: { bold?: boolean; italic?: boolean } = {}): TextRun | ImageRun {
   if (span.math) {
-    const height = 18, width = Math.max(4, Math.round(height * ((span.math.width ?? height) / (span.math.height ?? height))));
+    const height = INLINE_MATH_HEIGHT, width = Math.max(4, Math.round(height * ((span.math.width ?? height) / (span.math.height ?? height))));
     return wordImage(span.math, width, height);
   }
   return new TextRun({
@@ -130,7 +132,7 @@ function imageScale(image: EmbeddedImage, maxWidthPx: number, maxHeightPx: numbe
 function wordImage(image: EmbeddedImage, maxWidthPx = 624, maxHeightPx = 648): ImageRun {
   if (!image.data || !image.mimeType) throw new Error(`Image data is unavailable: ${image.source}`);
   const type = image.mimeType.split("/")[1] as "png" | "jpg" | "gif" | "bmp";
-  const limits = image.source.startsWith("math-display:") ? { width: Math.min(maxWidthPx, 520), height: Math.min(maxHeightPx, 72) } : { width: maxWidthPx, height: maxHeightPx };
+  const limits = image.source.startsWith("math-display:") ? { width: Math.min(maxWidthPx, 520), height: Math.min(maxHeightPx, DISPLAY_MATH_HEIGHT) } : { width: maxWidthPx, height: maxHeightPx };
   return new ImageRun({ data: new Uint8Array(image.data), type, transformation: imageScale(image, limits.width, limits.height), altText: { title: image.alt, description: image.alt, name: image.alt } });
 }
 
@@ -290,7 +292,7 @@ function tokens(state: PdfState, spans: InlineSpan[], force?: { bold?: boolean; 
   }
   return result;
 }
-function tokenWidth(item: PdfToken): number { return item.image ? 14 * ((item.image.width ?? 14) / (item.image.height ?? 14)) : item.font.widthOfTextAtSize(item.text, FONT_SIZE); }
+function tokenWidth(item: PdfToken): number { return item.image ? INLINE_MATH_HEIGHT * ((item.image.width ?? INLINE_MATH_HEIGHT) / (item.image.height ?? INLINE_MATH_HEIGHT)) : item.font.widthOfTextAtSize(item.text, FONT_SIZE); }
 function lineWidth(items: PdfToken[]): number { return items.reduce((sum, item) => sum + tokenWidth(item), 0); }
 function richLines(items: PdfToken[], firstWidth: number, laterWidth: number): PdfToken[][] {
   const lines: PdfToken[][] = [[]]; let width = 0;
@@ -315,7 +317,7 @@ function drawRich(state: PdfState, spans: InlineSpan[], options: { align?: "left
       const width = tokenWidth(item);
       if (item.image) {
         const embedded = state.mathImages.get(item.image.source); if (!embedded) throw new Error(`Math image was not prepared: ${item.image.alt}`);
-        state.page.drawImage(embedded, { x, y: state.y - 2, width, height: 14 });
+        state.page.drawImage(embedded, { x, y: state.y - 1, width, height: INLINE_MATH_HEIGHT });
       } else state.page.drawText(item.text, { x, y: state.y + (item.superscript ? 5 : 0), size: item.superscript ? 8 : FONT_SIZE, font: item.font, color: rgb(0, 0, 0) });
       if (item.strike) state.page.drawLine({ start: { x, y: state.y + 4 }, end: { x: x + width, y: state.y + 4 }, thickness: 0.7, color: rgb(0, 0, 0) });
       x += width;
@@ -344,7 +346,7 @@ async function pdfImage(state: PdfState, image: EmbeddedImage): Promise<PDFImage
 }
 async function drawPdfImage(state: PdfState, image: EmbeddedImage, maxWidth = CONTENT_WIDTH, maxHeight?: number): Promise<void> {
   const embedded = await pdfImage(state, image);
-  const availableHeight = image.source.startsWith("math-display:") ? Math.min(72, maxHeight ?? 72) : maxHeight ?? Math.max(72, state.y - MARGIN - LINE_HEIGHT);
+  const availableHeight = image.source.startsWith("math-display:") ? Math.min(DISPLAY_MATH_HEIGHT, maxHeight ?? DISPLAY_MATH_HEIGHT) : maxHeight ?? Math.max(72, state.y - MARGIN - LINE_HEIGHT);
   const scale = Math.min(1, maxWidth / embedded.width, availableHeight / embedded.height);
   const width = embedded.width * scale, height = embedded.height * scale;
   if (state.y - height < MARGIN) addPdfPage(state);
