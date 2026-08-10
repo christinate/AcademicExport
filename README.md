@@ -1,8 +1,8 @@
-# Academic Export
+# Academic Export for Obsidian
 
-Academic Export is a cross-platform [Obsidian](https://obsidian.md) community plugin that turns Markdown notes into consistently styled documents. Choose APA 7, MLA 9, Chicago 18, IEEE Conference, Harvard Extension School Thesis, Harvard Author-Date, or AMA 11; then select a paper-type variant and one or more output types supported by that style.
+Academic Export is a cross-platform [Obsidian](https://obsidian.md) community plugin that turns Markdown notes into consistently styled documents. Choose APA 7, MLA 9, Chicago 18, IEEE Conference, Harvard Extension School Thesis, Harvard Author-Date, or AMA 11, then select a paper-type variant such as PDF, DOCX, or HTML and one of the options for that style.
 
-> **Pre-release:** Academic Export is under active development and has not yet been submitted to the Obsidian Community Plugins catalog.
+If you like it and want to help a student, please donate to my ko-fi here: https://ko-fi.com/christinate
 
 ## What it does
 
@@ -171,15 +171,6 @@ For automatic rebuilding while developing:
 ```bash
 npm run dev
 ```
-
-## Releasing to the Obsidian community
-
-1. Run `npm test`, `npm run lint`, and `npm run build`.
-2. Confirm every staged path is listed in [pushtogit.md](pushtogit.md).
-3. Commit the generated release files required by your release process.
-4. Create a GitHub release whose tag exactly matches `manifest.json` (for example `0.1.0`, without `v`).
-5. Attach `main.js`, `manifest.json`, and `styles.css`. Built-in templates are embedded in `main.js`.
-6. Submit the repository to [`obsidianmd/obsidian-releases`](https://github.com/obsidianmd/obsidian-releases) after checking its current requirements.
 
 ## Current limitations
 
