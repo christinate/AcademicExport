@@ -1,12 +1,5 @@
-import type { App, TFile } from "obsidian";
+import { finishRenderMath, renderMath as renderObsidianMath, type App, type TFile } from "obsidian";
 import type { ContentBlock, EmbeddedImage, RenderedDocument } from "./render";
-import { mathjax } from "mathjax-full/js/mathjax.js";
-import { TeX } from "mathjax-full/js/input/tex.js";
-import { AllPackages } from "mathjax-full/js/input/tex/AllPackages.js";
-import { SVG } from "mathjax-full/js/output/svg.js";
-import { liteAdaptor } from "mathjax-full/js/adaptors/liteAdaptor.js";
-import type { LiteElement } from "mathjax-full/js/adaptors/lite/Element.js";
-import { RegisterHTMLHandler } from "mathjax-full/js/handlers/html.js";
 
 const MIME_BY_EXTENSION: Record<string, EmbeddedImage["mimeType"]> = {
   png: "image/png",
@@ -83,13 +76,10 @@ function imagesInBlocks(blocks: ContentBlock[]): EmbeddedImage[] {
   return images;
 }
 
-const mathAdaptor = liteAdaptor();
-RegisterHTMLHandler(mathAdaptor);
-const mathDocument = mathjax.document("", { InputJax: new TeX({ packages: AllPackages }), OutputJax: new SVG({ fontCache: "none" }) });
-
 async function renderMath(source: string, display: boolean): Promise<{ data: ArrayBuffer; mimeType: "image/png"; width: number; height: number }> {
-  const node = mathDocument.convert(source, { display }) as unknown as LiteElement;
-  const markup = mathAdaptor.outerHTML(node);
+  const rendered = renderObsidianMath(source, display);
+  await finishRenderMath();
+  const markup = rendered.outerHTML;
   const svgStart = markup.indexOf("<svg"), svgEnd = markup.lastIndexOf("</svg>");
   if (svgStart < 0 || svgEnd < 0) throw new Error(`MathJax could not render: ${source}`);
   const svg = markup.slice(svgStart, svgEnd + 6).replace(/currentColor/g, "#000000");

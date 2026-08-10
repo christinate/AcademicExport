@@ -9,6 +9,7 @@ Temporary files, rendered QA documents, local vault data, dependency installatio
 ```text
 .editorconfig
 .github/workflows/ci.yml
+.github/workflows/release.yml
 .gitignore
 LICENSE
 README.md
