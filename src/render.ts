@@ -189,7 +189,7 @@ function parseMarkdown(markdown: string, title: string): { blocks: ContentBlock[
       flush();
       const headingSpans = parseInline(heading[2].trim());
       const headingText = plainText(headingSpans);
-      if (/^(references?|works cited)$/i.test(headingText)) { inReferences = true; currentAddendum = null; continue; }
+      if (/^(references?|works cited|bibliography)$/i.test(headingText)) { inReferences = true; currentAddendum = null; continue; }
       if (inReferences) {
         currentAddendum = { title: headingSpans, blocks: [] };
         addenda.push(currentAddendum);
@@ -235,6 +235,13 @@ function htmlForBlock(block: ContentBlock): string {
   return `<table>${block.table.rows.map((row) => `<tr>${row.map((cell) => `<td>${spansHtml(cell.spans)}${cell.images.map((image) => `<img src="${escapeHtml(image.source)}" alt="${escapeHtml(image.alt)}">`).join("")}</td>`).join("")}</tr>`).join("")}</table>`;
 }
 
+function sourceListTitle(format: DocumentFormat, variant: PaperVariant): string {
+  if (format.id === "mla-9") return "Works Cited";
+  if (format.id === "chicago-18") return variant.id === "notes-bibliography" ? "Bibliography" : "References";
+  if (format.id === "harvard-thesis") return "Bibliography";
+  return "References";
+}
+
 export function renderDocument(note: ParsedNote, format: DocumentFormat, variantId: string, options: Record<string, boolean>): RenderedDocument {
   const get = (key: string) => fieldValue(note, key);
   const title = stringifyValue(get("Title")) || "Untitled";
@@ -259,7 +266,7 @@ export function renderDocument(note: ParsedNote, format: DocumentFormat, variant
     abstract: options.includeAbstract === false ? "" : structuredAbstract || stringifyValue(get("Abstract")),
     keywords: listValue(get("Keywords")),
     blocks: parsed.blocks,
-    references: frontmatterReferences.length ? frontmatterReferences : parsed.references,
+    references: parsed.references.length ? parsed.references : frontmatterReferences,
     addenda: parsed.addenda,
     variant,
     includeTitlePage: format.id === "mla-9" ? options.includeFirstPageHeading !== false : format.id === "ieee-conference" ? false : options.includeTitlePage !== false,
@@ -272,7 +279,7 @@ export function renderDocument(note: ParsedNote, format: DocumentFormat, variant
   const titlePage = mla ? `<section class="mla-heading">${rendered.includeTitlePage ? [...rendered.authors, rendered.instructor, rendered.course, rendered.dueDate].filter(Boolean).map((line) => `<p>${escapeHtml(line)}</p>`).join("") : ""}<p class="mla-title">${escapeHtml(title)}</p></section>` : rendered.includeTitlePage ? `<section class="title-page"><p class="title">${escapeHtml(title)}</p>${(format.id === "apa-7-student" ? studentLines : professionalLines).map((line) => `<p>${escapeHtml(line)}</p>`).join("")}${rendered.authorNote ? `<h1>Author Note</h1><p>${escapeHtml(rendered.authorNote)}</p>` : ""}</section>` : "";
   const abstract = rendered.abstract ? `<section class="abstract"><h1>Abstract</h1><p>${escapeHtml(rendered.abstract)}</p>${rendered.keywords.length ? `<p><em>Keywords:</em> ${escapeHtml(rendered.keywords.join(", "))}</p>` : ""}</section>` : "";
   const body = `<main>${mla ? "" : `<p class="paper-title">${escapeHtml(title)}</p>`}${rendered.blocks.map(htmlForBlock).join("")}</main>`;
-  const references = `<section class="references"><h1>${mla ? "Works Cited" : "References"}</h1>${rendered.references.map((entry) => `<p>${spansHtml(entry)}</p>`).join("")}</section>`;
+  const references = `<section class="references"><h1>${sourceListTitle(format, variant)}</h1>${rendered.references.map((entry) => `<p>${spansHtml(entry)}</p>`).join("")}</section>`;
   const addenda = rendered.addenda.map((page) => `<section class="addendum"><p class="addendum-title">${spansHtml(page.title)}</p>${page.blocks.map(htmlForBlock).join("")}</section>`).join("");
   rendered.html = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>${css}</style></head><body>${titlePage}${abstract}${body}${references}${addenda}</body></html>`;
   return rendered;

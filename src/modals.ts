@@ -1,7 +1,7 @@
 import { Modal, Notice, Setting, type ButtonComponent } from "obsidian";
 import type { App, TFile } from "obsidian";
 import { OUTPUT_LABELS, OUTPUT_TYPES, type OutputType } from "./config";
-import { BUILT_IN_FORMATS } from "./formats";
+import { BUILT_IN_FORMATS, exportVariantSelector, normalizeExportVariant } from "./formats";
 import { missingFields, parseNote } from "./note";
 import type { DocumentFormat, PluginSettings } from "./types";
 
@@ -19,8 +19,7 @@ export class ExportModal extends Modal {
       ?? Object.entries(settings.formats).find(([, value]) => value.default && value.enabled)?.[0]
       ?? BUILT_IN_FORMATS.find((format) => settings.formats[format.id]?.enabled)?.id ?? BUILT_IN_FORMATS[0].id;
     const format = BUILT_IN_FORMATS.find((item) => item.id === this.selectedFormatId) ?? BUILT_IN_FORMATS[0];
-    this.selectedVariantId = last && last.formatId === this.selectedFormatId && format.variants.some((item) => item.id === last.variantId)
-      ? last.variantId : settings.formats[this.selectedFormatId].defaultVariant;
+    this.selectedVariantId = normalizeExportVariant(format, last?.formatId === this.selectedFormatId ? last.variantId : undefined);
     if (last && last.formatId === this.selectedFormatId) {
       this.options = { ...last.options };
       last.outputTypes.filter((type) => settings.formats[this.selectedFormatId].outputTypes[type]?.enabled).forEach((type) => this.selectedOutputs.add(type));
@@ -49,17 +48,22 @@ export class ExportModal extends Modal {
     }
     new Setting(contentEl).setName("Document style").addDropdown((dropdown) => {
       BUILT_IN_FORMATS.filter((item) => this.settings.formats[item.id]?.enabled).forEach((item) => { dropdown.addOption(item.id, item.name); });
-      dropdown.setValue(format.id).onChange((value) => { this.selectedFormatId = value; this.selectedVariantId = this.settings.formats[value].defaultVariant; this.options = {}; this.selectDefaultOutputs(value); void this.render(); });
-    });
-    new Setting(contentEl).setName("Paper type").setDesc("Controls the recommended section structure while preserving shared formatting.").addDropdown((dropdown) => {
-      format.variants.forEach((variant) => { dropdown.addOption(variant.id, variant.name); });
-      dropdown.setValue(this.selectedVariantId).onChange((value) => {
-        this.selectedVariantId = value;
-        const variant = format.variants.find((item) => item.id === value);
-        if (variant) this.options.includeAbstract = variant.abstractDefault;
+      dropdown.setValue(format.id).onChange((value) => {
+        this.selectedFormatId = value;
+        const selectedFormat = BUILT_IN_FORMATS.find((item) => item.id === value) ?? BUILT_IN_FORMATS[0];
+        this.selectedVariantId = normalizeExportVariant(selectedFormat);
+        this.options = {};
+        this.selectDefaultOutputs(value);
         void this.render();
       });
     });
+    const variantSelector = this.settings.formats[format.id]?.enabled ? exportVariantSelector(format) : undefined;
+    if (variantSelector) {
+      new Setting(contentEl).setName(variantSelector.name).setDesc(variantSelector.description).addDropdown((dropdown) => {
+        format.variants.forEach((variant) => { dropdown.addOption(variant.id, variant.name); });
+        dropdown.setValue(this.selectedVariantId).onChange((value) => { this.selectedVariantId = normalizeExportVariant(format, value); });
+      });
+    }
     contentEl.createEl("h3", { text: "Output types" });
     for (const type of OUTPUT_TYPES) if (this.settings.formats[format.id].outputTypes[type].enabled) {
       new Setting(contentEl).setName(OUTPUT_LABELS[type]).addToggle((toggle) => toggle.setValue(this.selectedOutputs.has(type)).onChange((value) => value ? this.selectedOutputs.add(type) : this.selectedOutputs.delete(type)));
@@ -91,11 +95,11 @@ export class FormatPickerModal extends Modal {
 }
 
 export class PaperTypePickerModal extends Modal {
-  constructor(app: App, private format: DocumentFormat, private defaultVariantId: string, private select: (variantId: string) => void) { super(app); }
+  constructor(app: App, private format: DocumentFormat, private select: (variantId: string) => void) { super(app); }
   onOpen(): void {
     this.contentEl.createEl("h2", { text: `${this.format.name} paper type` });
     for (const variant of this.format.variants) {
-      new Setting(this.contentEl).setName(variant.name).setDesc(variant.description).addButton((button) => button.setButtonText(variant.id === this.defaultVariantId ? "Select (default)" : "Select").onClick(() => { this.close(); this.select(variant.id); }));
+      new Setting(this.contentEl).setName(variant.name).setDesc(variant.description).addButton((button) => button.setButtonText("Select").onClick(() => { this.close(); this.select(variant.id); }));
     }
   }
   onClose(): void { this.contentEl.empty(); }

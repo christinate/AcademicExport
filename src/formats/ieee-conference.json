@@ -5,8 +5,7 @@
     { "key": "Author", "label": "Author", "type": "string-list", "required": true, "description": "Author names." },
     { "key": "Affiliation", "label": "Affiliation", "type": "string-list", "required": true, "description": "Author affiliations." },
     { "key": "Abstract", "label": "Abstract", "type": "markdown", "required": true, "description": "Self-contained abstract of no more than 250 words." },
-    { "key": "Keywords", "label": "Keywords", "type": "string-list", "required": true, "description": "Three to five index terms." },
-    { "key": "References", "label": "References", "type": "markdown", "required": true, "description": "Numbered references in citation order." }
+    { "key": "Keywords", "label": "Keywords", "type": "string-list", "required": true, "description": "Three to five index terms." }
   ],
   "options": [{ "key": "includeAbstract", "label": "Include abstract and index terms", "description": "Include the abstract and keywords beneath the author block.", "default": true }],
   "rules": { "size": "letter", "marginInches": 0.75, "fontFamily": "Times New Roman", "fontSizePoints": 10, "lineSpacing": 1, "paragraphIndentInches": 0.16, "pageNumbers": false, "runningHead": false },

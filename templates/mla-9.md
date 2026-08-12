@@ -5,7 +5,6 @@ Author:
 Instructor: "Instructor Name"
 Course: "COURSE 101: Course Name"
 DueDate: "2026-01-01"
-References: ""
 ---
 
 # Paper Title

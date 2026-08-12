@@ -1,6 +1,6 @@
 # Academic Export for Obsidian
 
-Academic Export is a cross-platform [Obsidian](https://obsidian.md) community plugin that turns Markdown notes into consistently styled documents. Choose APA 7, MLA 9, Chicago 18, IEEE Conference, Harvard Extension School Thesis, Harvard Author-Date, or AMA 11, then select a paper-type variant such as PDF, DOCX, or HTML and one of the options for that style.
+Academic Export is a cross-platform [Obsidian](https://obsidian.md) community plugin that turns Markdown notes into consistently styled documents. Choose APA 7, MLA 9, Chicago 18, IEEE Conference, Harvard Extension School Thesis, Harvard Author-Date, or AMA 11, then select PDF, DOCX, or HTML and the options for that style.
 
 Show some love! If you like it and want to help a student, please donate to my ko-fi here: https://ko-fi.com/christinate
 
@@ -8,7 +8,7 @@ Show some love! If you like it and want to help a student, please donate to my k
 
 - Adds **Export in…** to note menus and the command palette.
 - Lets you select one document style and multiple output types.
-- Reopens **Export in…** with the document style, paper type, output types, and format options used for the previous interactive export.
+- Reopens **Export in…** with the document style, output types, format options, and any applicable Chicago citation system or AMA abstract type used for the previous interactive export.
 - Includes student and professional APA paper-type variants based on the official APA sample-paper collection.
 - Remembers the choices from the previous interactive export.
 - Shows a readable warning such as `Title (APA 7 Student)` when data is missing.
@@ -31,13 +31,18 @@ Affiliation: "Department, University"
 Course: "WRIT 101: Academic Writing"
 Instructor: "Professor Name"
 DueDate: "2026-08-09"
-References: ""
 ---
 
 # My Paper
 
 The paper begins here.
+
+## References
+
+Add one reference per paragraph.
 ```
+
+References belong in the Markdown body under `## References`, `## Works Cited`, or `## Bibliography`, not in YAML. Older notes that store references in the YAML `References` or `WorksCited` property remain supported.
 
 ### Tables, figures, and post-reference addenda
 
@@ -73,7 +78,7 @@ Field names are intentionally consistent across styles. For example, every style
 
 ### Export in…
 
-Open a Markdown note and use its menu or run **Academic Export: Export in…**. Select one document style, any number of enabled output types, and style-specific options. Select **Export** to generate every chosen output. The next time the window opens, it restores the choices from the previous interactive export; unavailable choices safely fall back to configured defaults. Standard and Obsidian-style pipe tables are supported, including optional outer pipes, escaped pipes, wiki-link aliases, and embedded images inside cells.
+Open a Markdown note and use its menu or run **Academic Export: Export in…**. Select one document style, any number of enabled output types, and style-specific options. When the selected, enabled style is Chicago 18, the popup also shows **Citation system**; when it is AMA 11, it shows **Abstract type**. Other styles do not show a generic paper-type selector because paper types only affect their generated template outlines. Select **Export** to generate every chosen output. The next time the window opens, it restores the choices from the previous interactive export; unavailable choices safely fall back to configured defaults. Standard and Obsidian-style pipe tables are supported, including optional outer pipes, escaped pipes, wiki-link aliases, and embedded images inside cells.
 
 Embed an Obsidian Canvas with `![[My canvas.canvas]]` or an extensionless `![[My canvas]]` link that resolves to a `.canvas` file. Academic Export rasterizes its nodes, groups, labels, and connecting arrows to PNG and inserts the result at the embed position. File and link cards are represented by their labels or paths; live webpage previews and interactive Canvas behavior are not part of a static document export.
 
@@ -84,7 +89,7 @@ APA paper types currently include:
 - Student: general paper, annotated bibliography, design project, discussion post, journalism assignment, literature review, and quantitative study.
 - Professional: general manuscript, literature review, mixed methods study, qualitative study, quantitative study, and review article.
 
-Paper types share the APA page system but provide different recommended section structures. Instructor, department, institution, publisher, and journal requirements can override APA defaults.
+Paper types share the APA page system but provide different recommended section structures when creating or replacing templates. They are not shown in **Export in…** because they do not restyle an existing note. Instructor, department, institution, publisher, and journal requirements can override APA defaults.
 
 MLA 9 includes general research paper, literary analysis, comparative essay, and annotated-bibliography starting structures. MLA output uses the conventional first-page author/instructor/course/date heading, centered unbolded title, surname and page number in the upper-right header, double spacing, half-inch paragraph indents, and a separately paginated Works Cited list with hanging indents. Instructor requirements override these defaults.
 
@@ -92,7 +97,7 @@ Chicago 18 offers Notes and Bibliography or Author-Date. IEEE Conference uses a 
 
 ### New export template
 
-Right-click a vault folder, select **New export template**, and choose one enabled style. The plugin copies its bundled Markdown template into a new, uniquely named note in that folder and opens it.
+Right-click a vault folder, select **New export template**, choose one enabled style, and select a paper type. The plugin copies its bundled Markdown template with that paper type's recommended section outline into a new, uniquely named note and opens it.
 
 ### Replace with template
 
@@ -109,7 +114,7 @@ The **Academic Export** community-plugin settings include:
 - Available formats are grouped by document style. Each group has a labeled **Available** column for controlling what appears in Export in….
 - Every style owns its output-type settings. For example, APA can offer PDF and Word while another style can be limited to PDF.
 - Style-specific switches, such as **Include title page**, appear in the same group as that style.
-- A default paper type can be selected independently for each APA style.
+- Paper-type defaults are not settings; paper types are selected while creating or replacing a template.
 - General options are separated from the available-format groups.
 - **Default save location**, a vault-relative mobile/fallback folder.
 - **Show Page Counter**, which adds the selected style's exact generated-PDF page count to Obsidian's status bar after a short idle delay.
@@ -192,3 +197,14 @@ Issues and pull requests are welcome at [christinate/AcademicExport](https://git
 ## License
 
 [MIT](LICENSE)
+
+## What's New in Version 0.1.3
+
+- Rebuilt LaTeX math export around a self-contained, lazily initialized renderer that preserves fractions, roots, Greek letters, subscripts, and superscripts without slowing plugin startup.
+- Standardized inline and display equation sizing while keeping oversized equations within the printable page area.
+- Moved references out of generated YAML and into `## References`, `## Works Cited`, or `## Bibliography` sections in the Markdown body; legacy YAML references remain supported.
+- Added Author and Affiliation pre-filling when replacing an existing note with an export template.
+- Removed the generic **Paper type** selector from **Export in…** and the unused default paper-type setting.
+- Added a conditional **Citation system** selector for enabled Chicago 18 exports and an **Abstract type** selector for enabled AMA 11 exports.
+- Kept paper-type choices in the template creation and replacement workflows, where they generate the appropriate recommended section outline.
+- Made Chicago source-list headings follow the selected citation system in PDF, DOCX, and HTML exports.

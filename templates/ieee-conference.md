@@ -9,7 +9,6 @@ Keywords:
   - "keyword one"
   - "keyword two"
   - "keyword three"
-References: ""
 ---
 
 # Specific and Concise Conference Paper Title

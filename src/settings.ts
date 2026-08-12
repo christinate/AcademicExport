@@ -7,46 +7,43 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     "apa-7-student": {
       enabled: true,
       default: true,
-      defaultVariant: "general-student",
       outputTypes: { pdf: { enabled: true, default: true }, docx: { enabled: true, default: false }, html: { enabled: false, default: false } },
       options: { includeTitlePage: true, includeAbstract: false }
     },
     "apa-7-professional": {
       enabled: true,
       default: false,
-      defaultVariant: "general-professional",
       outputTypes: { pdf: { enabled: true, default: true }, docx: { enabled: true, default: false }, html: { enabled: false, default: false } },
       options: { includeTitlePage: true, includeAbstract: true, includeAuthorNote: true }
     },
     "mla-9": {
       enabled: true,
       default: false,
-      defaultVariant: "general-research-paper",
       outputTypes: { pdf: { enabled: true, default: true }, docx: { enabled: true, default: false }, html: { enabled: false, default: false } },
       options: { includeFirstPageHeading: true }
     },
     "chicago-18": {
-      enabled: true, default: false, defaultVariant: "notes-bibliography",
+      enabled: true, default: false,
       outputTypes: { pdf: { enabled: true, default: true }, docx: { enabled: true, default: false }, html: { enabled: false, default: false } },
       options: { includeTitlePage: true }
     },
     "ieee-conference": {
-      enabled: true, default: false, defaultVariant: "standard-conference-paper",
+      enabled: true, default: false,
       outputTypes: { pdf: { enabled: true, default: true }, docx: { enabled: true, default: false }, html: { enabled: false, default: false } },
       options: { includeAbstract: true }
     },
     "harvard-thesis": {
-      enabled: true, default: false, defaultVariant: "extension-school-mla-thesis",
+      enabled: true, default: false,
       outputTypes: { pdf: { enabled: true, default: true }, docx: { enabled: true, default: false }, html: { enabled: false, default: false } },
       options: { includeTitlePage: true, includeAbstract: true }
     },
     "harvard-author-date": {
-      enabled: true, default: false, defaultVariant: "general-paper",
+      enabled: true, default: false,
       outputTypes: { pdf: { enabled: true, default: true }, docx: { enabled: true, default: false }, html: { enabled: false, default: false } },
       options: { includeTitlePage: true }
     },
     "ama-11": {
-      enabled: true, default: false, defaultVariant: "structured-abstract",
+      enabled: true, default: false,
       outputTypes: { pdf: { enabled: true, default: true }, docx: { enabled: true, default: false }, html: { enabled: false, default: false } },
       options: { includeTitlePage: true, includeAbstract: true }
     }
@@ -69,9 +66,8 @@ export function mergeSettings(saved: LegacySettings | null): PluginSettings {
     const stored = saved?.formats?.[id];
     const legacyOutputs = saved?.outputTypes;
     formats[id] = {
-      ...defaults,
-      ...stored,
-      defaultVariant: stored?.defaultVariant ?? defaults.defaultVariant,
+      enabled: stored?.enabled ?? defaults.enabled,
+      default: stored?.default ?? defaults.default,
       options: { ...defaults.options, ...stored?.options },
       outputTypes: Object.fromEntries(Object.entries(defaults.outputTypes).map(([type, state]) => [type, {
         ...state,

@@ -15,8 +15,7 @@
     { "key": "MainOutcomesMeasures", "label": "Main outcomes and measures", "type": "markdown", "required": false, "description": "Structured abstract outcomes and measures." },
     { "key": "Results", "label": "Results", "type": "markdown", "required": false, "description": "Structured abstract results." },
     { "key": "ConclusionsRelevance", "label": "Conclusions and relevance", "type": "markdown", "required": false, "description": "Structured abstract conclusions and relevance." },
-    { "key": "Keywords", "label": "Keywords", "type": "string-list", "required": false, "description": "Three to ten keywords." },
-    { "key": "References", "label": "References", "type": "markdown", "required": true, "description": "Numbered references in citation order." }
+    { "key": "Keywords", "label": "Keywords", "type": "string-list", "required": false, "description": "Three to ten keywords." }
   ],
   "options": [{ "key": "includeTitlePage", "label": "Include Liberty title page", "description": "Include the course-paper title page used by the supplied Liberty templates.", "default": true }, { "key": "includeAbstract", "label": "Include abstract", "description": "Include the selected abstract type.", "default": true }],
   "rules": { "size": "letter", "marginInches": 1, "fontFamily": "Times New Roman", "fontSizePoints": 12, "lineSpacing": 2, "paragraphIndentInches": 0.5, "pageNumbers": true, "runningHead": true },

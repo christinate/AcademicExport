@@ -9,7 +9,6 @@ Abstract: "Summarize the problem, method, results, and implications."
 Keywords:
   - "keyword one"
   - "keyword two"
-References: ""
 ---
 
 # Paper Title

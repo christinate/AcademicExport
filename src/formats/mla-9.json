@@ -9,8 +9,7 @@
     { "key": "Author", "label": "Author", "type": "string-list", "required": true, "description": "Student author name.", "aliases": ["Authors"] },
     { "key": "Instructor", "label": "Instructor", "type": "string", "required": true, "description": "Instructor name." },
     { "key": "Course", "label": "Course", "type": "string", "required": true, "description": "Course number and name." },
-    { "key": "DueDate", "label": "Date", "type": "date", "required": true, "description": "Submission date.", "aliases": ["Date"] },
-    { "key": "References", "label": "Works Cited", "type": "markdown", "required": true, "description": "Works-cited entries; may be empty.", "aliases": ["WorksCited"] }
+    { "key": "DueDate", "label": "Date", "type": "date", "required": true, "description": "Submission date.", "aliases": ["Date"] }
   ],
   "options": [
     { "key": "includeFirstPageHeading", "label": "Include first-page heading", "description": "Include author, instructor, course, and date above the paper title.", "default": true }

@@ -18,7 +18,6 @@ Keywords:
   - "keyword one"
   - "keyword two"
   - "keyword three"
-References: ""
 ---
 
 # Concise and Informative Medical Manuscript Title

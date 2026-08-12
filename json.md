@@ -5,13 +5,13 @@ This file is the normative contributor and AI-authoring guide for document-style
 ## Design rules
 
 1. A style definition is not an output type. Do not put PDF- or DOCX-specific implementation in JSON.
-2. Reuse canonical field names. Every title is `Title`; every author list is `Author`; every references list is `References`.
+2. Reuse canonical field names. Every title is `Title`; every author list is `Author`.
 3. Put variant-specific labels in `label`, not in the canonical key.
 4. Use `aliases` only to accept common legacy fields. Templates must use the canonical key.
 5. Mark a field required only when the authoritative style requires it for that variant.
 6. Describe options declaratively. An option controls rendering; it never runs code.
 7. Cite authoritative research in `formats.md` before adding a definition.
-8. Add a complete Markdown template whose YAML uses every required field and demonstrates optional fields.
+8. Add a complete Markdown template whose YAML uses every required metadata field and whose body demonstrates required document sections.
 
 ## Schema
 
@@ -79,7 +79,7 @@ This file is the normative contributor and AI-authoring guide for document-style
 - `name`: concise display name.
 - `description`: one sentence suitable for a picker.
 - `templateFile`: plugin-root-relative Markdown template path.
-- `fields`: frontmatter/body data requirements.
+- `fields`: YAML frontmatter metadata requirements.
 - `options`: user-controllable rendering choices.
 - `rules`: output-neutral page geometry and typography.
 - `sections`: ordered semantic document sections.
@@ -90,7 +90,7 @@ This file is the normative contributor and AI-authoring guide for document-style
 - `key`: canonical, case-sensitive template key. Runtime matching is case-insensitive for user convenience.
 - `label`: friendly UI name used in missing-field warnings.
 - `type`: `string`, `date`, `string-list`, or `markdown`.
-- `required`: whether absence prevents clean automatic export. `References` is considered present when the key exists, even if its value is empty.
+- `required`: whether absence prevents clean automatic export.
 - `description`: what belongs in the field.
 - `aliases`: optional accepted names for existing notes.
 
@@ -108,7 +108,6 @@ Canonical vocabulary:
 | Abstract | `Abstract` |
 | Search keywords | `Keywords` |
 | Author note | `AuthorNote` |
-| References/bibliography content | `References` |
 | Main Markdown | `Body` (derived; normally not frontmatter) |
 
 ### Option
@@ -121,27 +120,31 @@ Rules express intent shared by exporters. Exporters are responsible for translat
 
 ### Sections
 
-Sections provide semantic order and pagination hints. `key` should reuse a field key where appropriate. `Body` is reserved for the note’s Markdown body.
+Sections provide semantic order and pagination hints. `key` should reuse a field key where appropriate. `Body` is reserved for the note’s Markdown body. Use the canonical section key `References` for a required source list, regardless of whether its rendered heading is References, Works Cited, or Bibliography. Source-list content belongs in the Markdown body under that heading, not in YAML.
 
 ### Variants
 
 - `id`: stable lower-hyphen identifier within the parent format.
-- `name`: user-facing paper-type name.
+- `name`: user-facing paper-type name in template-creation and replacement workflows.
 - `description`: explains the intended assignment or manuscript type.
 - `recommendedSections`: ordered section names used when creating a new template.
-- `abstractDefault`: whether this paper type normally selects the abstract option. Instructor, institution, publisher, and journal requirements can override it.
+- `abstractDefault`: whether this paper type normally includes an abstract in its recommended template structure. Instructor, institution, publisher, and journal requirements can override it.
+
+Variants normally guide generated template outlines and are not shown in **Export in…**. Chicago 18 and AMA 11 are explicit exceptions because their citation-system and abstract-type choices materially affect exported content.
 
 ## Template contract
 
 Every definition has a Markdown template. It must:
 
 - begin with valid YAML frontmatter;
-- include all required canonical keys;
+- include all required canonical metadata keys;
 - include optional keys when they teach the expected structure;
 - use YAML lists for `string-list` values;
 - use ISO `YYYY-MM-DD` dates in examples;
 - include a useful body outline without pretending placeholder prose is real content;
 - contain a References section when the style uses references.
+
+The exporter recognizes `## References`, `## Works Cited`, and `## Bibliography` as source-list headings. Legacy notes containing YAML `References` or `WorksCited` values remain supported, but new templates and format field definitions must not use those properties.
 
 ## AI procedure for adding a format
 

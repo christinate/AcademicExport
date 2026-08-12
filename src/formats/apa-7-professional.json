@@ -11,8 +11,7 @@
     { "key": "Affiliation", "label": "Affiliation", "type": "string", "required": true, "description": "Institutional affiliation." },
     { "key": "AuthorNote", "label": "Author note", "type": "markdown", "required": false, "description": "ORCID, affiliation changes, disclosures, acknowledgements, and contact information." },
     { "key": "Abstract", "label": "Abstract", "type": "markdown", "required": true, "description": "Concise paper summary." },
-    { "key": "Keywords", "label": "Keywords", "type": "string-list", "required": true, "description": "Search keywords." },
-    { "key": "References", "label": "References", "type": "markdown", "required": true, "description": "Reference list; may be empty." }
+    { "key": "Keywords", "label": "Keywords", "type": "string-list", "required": true, "description": "Search keywords." }
   ],
   "options": [
     { "key": "includeTitlePage", "label": "Include title page", "description": "Create the professional title page.", "default": true },

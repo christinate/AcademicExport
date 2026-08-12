@@ -62,6 +62,7 @@ src/formats/index.ts
 src/formats/mla-9.json
 src/global.d.ts
 src/main.ts
+src/math.ts
 src/markdown.d.ts
 src/modals.ts
 src/note.ts

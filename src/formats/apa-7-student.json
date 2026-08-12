@@ -12,8 +12,7 @@
     { "key": "Instructor", "label": "Instructor", "type": "string", "required": true, "description": "Instructor name." },
     { "key": "DueDate", "label": "Due date", "type": "date", "required": true, "description": "Assignment due date.", "aliases": ["Date"] },
     { "key": "Abstract", "label": "Abstract", "type": "markdown", "required": false, "description": "Optional abstract if requested." },
-    { "key": "Keywords", "label": "Keywords", "type": "string-list", "required": false, "description": "Optional keywords." },
-    { "key": "References", "label": "References", "type": "markdown", "required": true, "description": "Reference list; may be empty." }
+    { "key": "Keywords", "label": "Keywords", "type": "string-list", "required": false, "description": "Optional keywords." }
   ],
   "options": [
     { "key": "includeTitlePage", "label": "Include title page", "description": "Create the APA student title page.", "default": true },

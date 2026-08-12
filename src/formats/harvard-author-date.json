@@ -5,8 +5,7 @@
     { "key": "Author", "label": "Author", "type": "string-list", "required": true, "description": "Author name." },
     { "key": "Affiliation", "label": "Affiliation", "type": "string", "required": false, "description": "Institution or department." },
     { "key": "Course", "label": "Course", "type": "string", "required": false, "description": "Course information." },
-    { "key": "DueDate", "label": "Date", "type": "date", "required": false, "description": "Submission date.", "aliases": ["Date"] },
-    { "key": "References", "label": "Reference List", "type": "markdown", "required": true, "description": "Alphabetized author-date reference entries." }
+    { "key": "DueDate", "label": "Date", "type": "date", "required": false, "description": "Submission date.", "aliases": ["Date"] }
   ],
   "options": [{ "key": "includeTitlePage", "label": "Include title page", "description": "Create a general academic title page.", "default": true }],
   "rules": { "size": "letter", "marginInches": 1, "fontFamily": "Times New Roman", "fontSizePoints": 12, "lineSpacing": 2, "paragraphIndentInches": 0.5, "pageNumbers": true, "runningHead": false },

@@ -50,7 +50,6 @@ export interface FormatPreference {
   default: boolean;
   outputTypes: Record<OutputType, OutputPreference>;
   options: Record<string, boolean>;
-  defaultVariant: string;
 }
 export interface PluginSettings {
   formats: Record<string, FormatPreference>;

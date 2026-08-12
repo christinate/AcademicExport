@@ -21,11 +21,13 @@ Student variants: General Student Paper, Annotated Bibliography, Design Project,
 
 Professional variants: General Professional Manuscript, Literature Review, Mixed Methods Study, Qualitative Study, Quantitative Study, and Review Article.
 
-Variants declare recommended section sequences while inheriting the shared APA layout engine. They are based on the official [APA Style sample-paper downloads](https://apastyle.apa.org/style-grammar-guidelines/paper-format/sample-papers), last reviewed August 9, 2026.
+Variants declare recommended section sequences used by **New export template** and **Replace with template** while inheriting the shared APA layout engine. They do not appear in **Export in…** because choosing one does not restyle an existing note. They are based on the official [APA Style sample-paper downloads](https://apastyle.apa.org/style-grammar-guidelines/paper-format/sample-papers), last reviewed August 9, 2026.
 
 ### MLA 9 variants
 
 MLA variants include General Research Paper, Literary Analysis, Comparative Essay, and Annotated Bibliography. They share the MLA page system while leaving discipline- and instructor-specific section organization flexible.
+
+Chicago and AMA are the export exceptions: an enabled, selected Chicago style shows a **Citation system** selector, and an enabled, selected AMA style shows an **Abstract type** selector. These choices materially affect exported content, unlike a recommended template outline.
 
 ## Planned document styles
 

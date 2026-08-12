@@ -1,7 +1,7 @@
 import { MarkdownView, Notice, Plugin, TFile, TFolder, normalizePath } from "obsidian";
 import type { Menu, TAbstractFile } from "obsidian";
 import { safeFilename, saveArtifacts } from "./destination";
-import { FORMAT_BY_ID } from "./formats";
+import { FORMAT_BY_ID, normalizeExportVariant } from "./formats";
 import { ConfirmReplaceModal, ExportModal, FormatPickerModal, PaperTypePickerModal, type ExportSelection } from "./modals";
 import { missingFields, parseNote } from "./note";
 import { renderDocument } from "./render";
@@ -52,7 +52,8 @@ export default class AcademicExportPlugin extends Plugin {
     try {
       const source = view?.file?.path === file.path ? view.editor.getValue() : await this.app.vault.read(file);
       const preference = this.settings.formats[format.id];
-      const rendered = renderDocument(parseNote(source), format, preference.defaultVariant, preference.options);
+      const lastVariant = this.settings.lastExportSelection?.formatId === format.id ? this.settings.lastExportSelection.variantId : undefined;
+      const rendered = renderDocument(parseNote(source), format, normalizeExportVariant(format, lastVariant), preference.options);
       const [{ resolveDocumentImages }, { exportArtifact }, { PDFDocument }] = await Promise.all([import("./assets"), import("./exporters"), import("pdf-lib")]);
       await resolveDocumentImages(this.app, file, rendered);
       const artifact = await exportArtifact("pdf", rendered, format);
@@ -75,11 +76,11 @@ export default class AcademicExportPlugin extends Plugin {
     if (!last) return null;
     const preference = this.settings.formats[last.formatId];
     const format = preference?.enabled ? FORMAT_BY_ID.get(last.formatId) : undefined;
-    if (!format || !format.variants.some((variant) => variant.id === last.variantId)) return null;
+    if (!format) return null;
     const outputTypes = last.outputTypes.filter((type) => preference.outputTypes[type]?.enabled);
     return outputTypes.length ? {
       format,
-      variantId: last.variantId,
+      variantId: normalizeExportVariant(format, last.variantId),
       outputTypes,
       options: { ...preference.options, ...last.options }
     } : null;
@@ -107,7 +108,7 @@ export default class AcademicExportPlugin extends Plugin {
       new Notice(paths.length ? `Exported ${paths.length} file${paths.length === 1 ? "" : "s"}.` : "Export canceled; no files were written.");
     } catch (error) { console.error("Academic Export failed", error); new Notice(`Export failed: ${error instanceof Error ? error.message : String(error)}`); }
   }
-  private chooseNewTemplate(folder: TFolder): void { new FormatPickerModal(this.app, "New export template", this.settings, (format) => new PaperTypePickerModal(this.app, format, this.settings.formats[format.id].defaultVariant, (variantId) => void this.createFromTemplate(folder, format, variantId)).open()).open(); }
+  private chooseNewTemplate(folder: TFolder): void { new FormatPickerModal(this.app, "New export template", this.settings, (format) => new PaperTypePickerModal(this.app, format, (variantId) => void this.createFromTemplate(folder, format, variantId)).open()).open(); }
   private async createFromTemplate(folder: TFolder, format: DocumentFormat, variantId: string): Promise<void> {
     const template = this.prefillTemplate(this.applyVariantTemplate(this.readTemplate(format), format, variantId));
     const variant = format.variants.find((item) => item.id === variantId) ?? format.variants[0];
@@ -115,14 +116,14 @@ export default class AcademicExportPlugin extends Plugin {
     while (this.app.vault.getAbstractFileByPath(path)) path = normalizePath(`${folder.path}/${variant.name} ${counter++}.md`);
     const file = await this.app.vault.create(path, template); await this.app.workspace.getLeaf(true).openFile(file);
   }
-  private chooseReplacement(file: TFile): void { new FormatPickerModal(this.app, "Replace with template", this.settings, (format) => new PaperTypePickerModal(this.app, format, this.settings.formats[format.id].defaultVariant, (variantId) => new ConfirmReplaceModal(this.app, format, () => this.replaceWithTemplate(file, format, variantId)).open()).open()).open(); }
+  private chooseReplacement(file: TFile): void { new FormatPickerModal(this.app, "Replace with template", this.settings, (format) => new PaperTypePickerModal(this.app, format, (variantId) => new ConfirmReplaceModal(this.app, format, () => this.replaceWithTemplate(file, format, variantId)).open()).open()).open(); }
   private async replaceWithTemplate(file: TFile, format: DocumentFormat, variantId: string): Promise<void> {
     const original = await this.app.vault.read(file);
     if (this.settings.createBackups) {
       const stamp = new Date().toISOString().replace(/[:.]/g, "-");
       await this.app.vault.create(normalizePath(`${file.parent?.path ?? ""}/${file.basename}.${stamp}.backup.md`), original);
     }
-    const replacement = this.applyVariantTemplate(this.readTemplate(format), format, variantId);
+    const replacement = this.prefillTemplate(this.applyVariantTemplate(this.readTemplate(format), format, variantId));
     await this.app.vault.process(file, () => replacement); new Notice(`Replaced with ${format.name} template.`);
   }
   private applyVariantTemplate(template: string, format: DocumentFormat, variantId: string): string {

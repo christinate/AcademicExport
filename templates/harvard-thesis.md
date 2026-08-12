@@ -5,7 +5,6 @@ Author:
 Affiliation: "Your Field"
 DueDate: "May 2026"
 Abstract: "Summarize the thesis."
-References: ""
 ---
 
 # Thesis Title

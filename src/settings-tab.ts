@@ -72,13 +72,6 @@ export class ExportSettingTab extends PluginSettingTab {
         control: { type: "toggle", key: `${FORMAT_PREFIX}${format.id}:output:${type}` }
       });
       if (format.options.length) {
-        const options = Object.fromEntries(format.variants.map((variant) => [variant.id, variant.name]));
-        availability.push({
-          name: "Default paper type",
-          desc: "Recommended section structure selected when this format opens.",
-          aliases: [format.name, "variant"],
-          control: { type: "dropdown", key: `${FORMAT_PREFIX}${format.id}:variant`, options }
-        });
         for (const option of format.options) availability.push({
           name: option.label,
           desc: option.description,
@@ -101,7 +94,7 @@ export class ExportSettingTab extends PluginSettingTab {
       const intro = fragment.createEl("p");
       const projectLink = intro.createEl("a", { href: PROJECT.githubUrl });
       projectLink.textContent = projectName;
-      intro.append(" is a cross-platform Obsidian community plugin that turns Markdown notes into consistently styled documents. Choose APA 7, MLA 9, Chicago 18, IEEE Conference, Harvard Extension School Thesis, Harvard Author-Date, or AMA 11, then select a paper-type variant such as PDF, DOCX, or HTML and one of the options for that style.");
+      intro.append(" is a cross-platform Obsidian community plugin that turns Markdown notes into consistently styled documents. Choose APA 7, MLA 9, Chicago 18, IEEE Conference, Harvard Extension School Thesis, Harvard Author-Date, or AMA 11, then select PDF, DOCX, or HTML and the options for that style.");
 
       const support = fragment.createEl("p");
       support.append("Show some love! If you like it and want to help a student, please ");
@@ -129,7 +122,6 @@ export class ExportSettingTab extends PluginSettingTab {
     const state = this.plugin.settings.formats[formatId];
     if (!state) return undefined;
     if (kind === "enabled") return state.enabled;
-    if (kind === "variant") return state.defaultVariant;
     if (kind === "output") return state.outputTypes[detail as OutputType]?.enabled;
     if (kind === "option") return state.options[detail];
     return undefined;
@@ -142,7 +134,6 @@ export class ExportSettingTab extends PluginSettingTab {
       const state = this.plugin.settings.formats[formatId];
       if (!state) return;
       if (kind === "enabled") state.enabled = Boolean(value);
-      else if (kind === "variant") { state.defaultVariant = String(value); refreshCounter = true; }
       else if (kind === "output" && state.outputTypes[detail as OutputType]) state.outputTypes[detail as OutputType].enabled = Boolean(value);
       else if (kind === "option") { state.options[detail] = Boolean(value); refreshCounter = true; }
     } else if (key === "defaultSaveLocation") this.plugin.settings.defaultSaveLocation = normalizePath(String(value) || "Exports");

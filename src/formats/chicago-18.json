@@ -5,8 +5,7 @@
     { "key": "Author", "label": "Author", "type": "string-list", "required": true, "description": "Author name." },
     { "key": "Course", "label": "Course", "type": "string", "required": true, "description": "Course name and number." },
     { "key": "Instructor", "label": "Instructor", "type": "string", "required": true, "description": "Instructor name." },
-    { "key": "DueDate", "label": "Date", "type": "date", "required": true, "description": "Submission date.", "aliases": ["Date"] },
-    { "key": "References", "label": "Bibliography or References", "type": "markdown", "required": true, "description": "One source-list entry per paragraph." }
+    { "key": "DueDate", "label": "Date", "type": "date", "required": true, "description": "Submission date.", "aliases": ["Date"] }
   ],
   "options": [{ "key": "includeTitlePage", "label": "Include title page", "description": "Create a Chicago-style title page.", "default": true }],
   "rules": { "size": "letter", "marginInches": 1, "fontFamily": "Times New Roman", "fontSizePoints": 12, "lineSpacing": 2, "paragraphIndentInches": 0.5, "pageNumbers": true, "runningHead": false },

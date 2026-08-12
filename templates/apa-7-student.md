@@ -8,7 +8,6 @@ Instructor: "Instructor Name"
 DueDate: "2026-01-01"
 Abstract: ""
 Keywords: []
-References: ""
 ---
 
 # Paper Title

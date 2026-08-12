@@ -24,15 +24,19 @@ export function fieldValue(note: ParsedNote, key: string, aliases: string[] = []
 }
 
 export function missingFields(note: ParsedNote, format: DocumentFormat, options: Record<string, boolean>): string[] {
-  return format.fields
+  const missing = format.fields
     .filter((field) => {
       if (!field.required) return false;
       if (field.key === "Abstract" && options.includeAbstract === false) return false;
       if (field.key === "AuthorNote" && options.includeAuthorNote === false) return false;
-      if (field.key === "References") return fieldValue(note, field.key, field.aliases) === undefined;
       return !hasValue(fieldValue(note, field.key, field.aliases));
     })
     .map((field) => field.label);
+  const referenceSection = format.sections.find((section) => section.key === "References" && section.required);
+  const legacyReferences = fieldValue(note, "References", ["WorksCited"]);
+  const bodyReferences = /^\s{0,3}#{1,6}\s+(?:references?|works cited|bibliography)\s*#*\s*$/im.test(note.body);
+  if (referenceSection && legacyReferences === undefined && !bodyReferences) missing.push(referenceSection.label);
+  return missing;
 }
 
 export function stringifyValue(value: unknown): string {

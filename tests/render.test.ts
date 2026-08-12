@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BUILT_IN_FORMATS } from "../src/formats";
+import { BUILT_IN_FORMATS, exportVariantSelector, normalizeExportVariant } from "../src/formats";
 import { parseNote } from "../src/note";
 import { plainText, renderDocument } from "../src/render";
 import { exportArtifact } from "../src/exporters";
@@ -13,7 +13,6 @@ Affiliation: School
 Course: Course
 Instructor: Instructor
 DueDate: 2026-08-09
-References: ''
 ---
 
 Body with *italic* and **bold** text.
@@ -102,7 +101,6 @@ Author: Alex Morgan
 Instructor: Dr. Rivera
 Course: ENGL 201
 DueDate: 2026-08-09
-References: ''
 ---
 
 # Reading Across Contexts
@@ -128,6 +126,42 @@ describe("additional document styles", () => {
     ]));
     expect(BUILT_IN_FORMATS.find((format) => format.id === "chicago-18")?.variants.map((variant) => variant.id)).toEqual(["notes-bibliography", "author-date"]);
     expect(BUILT_IN_FORMATS.find((format) => format.id === "ama-11")?.variants.map((variant) => variant.id)).toEqual(["structured-abstract", "unstructured-abstract"]);
+  });
+
+  it("limits export-time variant selectors to Chicago and AMA", () => {
+    const apa = BUILT_IN_FORMATS.find((format) => format.id === "apa-7-student")!;
+    const chicago = BUILT_IN_FORMATS.find((format) => format.id === "chicago-18")!;
+    const ama = BUILT_IN_FORMATS.find((format) => format.id === "ama-11")!;
+    expect(exportVariantSelector(apa)).toBeUndefined();
+    expect(exportVariantSelector(chicago)?.name).toBe("Citation system");
+    expect(exportVariantSelector(ama)?.name).toBe("Abstract type");
+    expect(normalizeExportVariant(apa, "quantitative-study")).toBe("general-student");
+    expect(normalizeExportVariant(chicago, "author-date")).toBe("author-date");
+    expect(normalizeExportVariant(ama, "unstructured-abstract")).toBe("unstructured-abstract");
+  });
+
+  it("renders a Bibliography body section as the source list", () => {
+    const format = BUILT_IN_FORMATS.find((item) => item.id === "chicago-18")!;
+    const note = parseNote(`---
+Title: History Paper
+Author: Student
+Course: HIST 101
+Instructor: Instructor
+DueDate: 2026-08-12
+---
+
+Paper body.
+
+## Bibliography
+
+Author, A. *Book Title*. Publisher, 2026.
+`);
+    const rendered = renderDocument(note, format, "notes-bibliography", { includeTitlePage: true });
+    expect(rendered.references).toHaveLength(1);
+    expect(rendered.references[0].some((span) => span.italic && span.text === "Book Title")).toBe(true);
+    expect(rendered.html).toContain("<h1>Bibliography</h1>");
+    const authorDate = renderDocument(note, format, "author-date", { includeTitlePage: true });
+    expect(authorDate.html).toContain("<h1>References</h1>");
   });
 
   it("exports Greek statistical symbols to PDF", async () => {
